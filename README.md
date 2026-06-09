@@ -1,43 +1,63 @@
 # Star Wars Galaxies Roleplay (SWGRP)
 
-A DarkRP-inspired Garry's Mod gamemode themed after **Star Wars Galaxies**. Built on Sandbox with modular Lua architecture, SQLite persistence, and a `custom/` extension folder (similar to DarkRP's modification addon pattern).
+A DarkRP-inspired Garry's Mod gamemode themed after **Star Wars Galaxies**. Built on Sandbox with a modular Lua architecture, SQLite persistence, bundled **FAdmin** administration, **CSV-driven content** (jobs, entities, shipments, ammo, vehicles), and a `custom/` extension folder (similar to DarkRP's modification addon pattern).
+
+> **New to SWGRP?** This README is the reference overview. For step-by-step installation, content authoring, gameplay walkthroughs, admin tools, and troubleshooting, see **[GUIDE.md](GUIDE.md)**.
 
 ## Quick Start
 
-1. Place `swgrp` in `garrysmod/gamemodes/`
-2. Launch GMod → **Create Multiplayer Game**
+1. Place the `swgrp` folder in `garrysmod/gamemodes/`
+2. Launch GMod → **Create Multiplayer Game** (or start a dedicated server)
 3. Select gamemode **Star Wars Galaxies RP**
 4. Configure server ConVars in the gamemode settings panel or via console
+5. (Optional) Edit `swgrp/data/*.csv` to add your own jobs, structures, shipments, ammo, and vehicles — no Lua required
+
+> ⚠️ If the server boots into **Sandbox** instead of SWGRP, a Lua error occurred during load. Launch with `-condebug` and check `garrysmod/console.log` for the first red error. See [GUIDE.md → Troubleshooting](GUIDE.md#troubleshooting).
 
 ## Architecture
 
 ```
 swgrp/
 ├── swgrp.txt                 # Gamemode manifest & ConVars
-├── README.md                 # This file
+├── README.md                 # This file (reference overview)
+├── GUIDE.md                  # Full setup / content / gameplay / admin guide
+├── data/                     # CSV content (master copies)
+│   ├── jobs.csv              # Professions
+│   ├── entities.csv          # Purchasable structures
+│   ├── shipments.csv         # Weapon crates
+│   ├── ammo.csv              # Ammunition types
+│   └── vehicles.csv          # Purchasable vehicles
 ├── gamemode/
 │   ├── shared.lua            # Core loader (client + server)
-│   ├── init.lua              # Server-only modules
-│   ├── cl_init.lua           # Client-only modules
+│   ├── init.lua              # Server-only module loader
+│   ├── cl_init.lua           # Client-only module loader
 │   ├── config/
 │   │   └── sh_config.lua     # Global configuration & ConVars
 │   ├── libraries/
 │   │   ├── sh_swgrp.lua      # Registration API (jobs, entities, etc.)
+│   │   ├── sh_content_loader.lua # CSV parser + loader (swgrp_reloadcontent)
+│   │   ├── sh_modelmap.lua   # Model path resolution for previews
 │   │   ├── sh_util.lua       # Utilities (doors, range chat, etc.)
 │   │   ├── sh_player.lua     # Player meta extensions
 │   │   ├── sh_network.lua    # Network string registry
 │   │   ├── sh_hooks.lua      # Addon hook API
+│   │   ├── sh_fadmin*.lua    # Bundled FAdmin compatibility shims
+│   │   ├── mysqlite/         # FAdmin's MySQLite (SQLite fallback)
 │   │   └── sv_database.lua   # SQLite persistence
-│   ├── modules/              # Feature modules (see below)
+│   ├── modules/              # Feature modules (sv_/cl_/sh_ per realm)
 │   ├── language/
 │   │   └── sh_english.lua    # Localization strings
-│   ├── vgui/                 # Custom VGUI panels
+│   ├── vgui/
+│   │   └── swgrp_terminal.lua # Shared terminal/menu UI toolkit
 │   └── custom/               # Server owner extensions (not overwritten)
-│       └── example_jobs.lua
+│       ├── example_jobs.lua  # Lua extension example (skipped by loader)
+│       └── data/             # Optional CSV overrides (appended to master)
 └── entities/
-    ├── entities/             # SENTs (harvesters, ATMs, etc.)
-    └── weapons/              # SWEPs (keys, lockpick, batons)
+    ├── entities/             # SENTs (harvesters, ATMs, terminals, etc.)
+    └── weapons/              # SWEPs (keys, lockpick, batons, zip tie, etc.)
 ```
+
+> The `gamemode/custom/` folder is the safe place for your changes. Files there load **after** core registration, and anything named `example*` is intentionally skipped by the loader.
 
 ## Registration API
 
@@ -56,14 +76,37 @@ swgrp/
 | `SWGRP.RegisterVehicle(data)` | Purchasable vehicle |
 | `SWGRP.RegisterContraband(data)` | Contraband type |
 
-## Professions (18)
+## CSV Content (recommended)
+
+Most content is defined in plain CSV files under `swgrp/data/` and loaded at startup by `sh_content_loader.lua`. This is the easiest way to add jobs/shop items without writing Lua. Server-owner overrides can be placed in `gamemode/custom/data/` (rows are **appended** to the master files).
+
+| File | Defines | Key columns |
+|------|---------|-------------|
+| `jobs.csv` | Professions | `name, command, category, allegiance, color, models, description, weapons, salary, max, admin, vote, flags` |
+| `entities.csv` | Purchasable structures | `class, name, model, price, max, cmd, allowed, category` |
+| `shipments.csv` | Weapon crates | `name, model, preview_model, entities, price, amount, separate, price_separate, allowed, category` |
+| `ammo.csv` | Ammunition | `name, ammo_type, model, price, amount, allowed, category` |
+| `vehicles.csv` | Vehicles | `name, model, class, script, price, allowed, category` |
+
+Formatting rules:
+- **Lists** (`models`, `weapons`, `entities`) are `|`-separated.
+- **`allowed`** is a quoted, comma-separated list of profession `command`s, or `*` / blank for everyone.
+- **`color`** is `R G B` (space or comma separated).
+- **`flags`** is a space/comma list: `hobo cook medic doctor bountyhunter hasLicense governor officer stormtrooper commander chief whitelist disguise captain`.
+- Lines starting with `#` are comments. Reload at runtime (superadmin) with `swgrp_reloadcontent`.
+
+Full column-by-column reference and examples: **[GUIDE.md → Authoring Content](GUIDE.md#authoring-content-csv)**.
+
+## Professions (19)
 
 | Category | Professions |
 |----------|-------------|
 | Civilians | Colonist, Refugee, Merchant, Artisan, Entertainer, Cantina Operator, Doctor |
-| Combat | Smuggler, Bounty Hunter, Commando, Arms Dealer, Combat Medic |
-| Imperial Forces | Stormtrooper, Imperial Officer, Security Commander, Planetary Governor |
+| Combat Professions | Smuggler, Bounty Hunter, Commando, Arms Dealer, Combat Medic |
+| Imperial Forces | Stormtrooper Captain, Stormtrooper, Imperial Officer, Security Commander, Planetary Governor |
 | Rebel Alliance | Rebel Soldier, Rebel Pilot |
+
+> Professions ship in `data/jobs.csv` — edit that file (or add rows in `custom/data/jobs.csv`) to change the roster. The Lua `SWGRP.RegisterJob` API below is still available for advanced/scripted jobs.
 
 ### Job Data Fields
 
@@ -215,9 +258,10 @@ SWGRP.RegisterJob("Example", {
 ### UI
 | Key | Panel |
 |-----|-------|
-| F1 | Galactic Information Network (MOTD) |
-| F4 | Profession Terminal (jobs, shop, missions, craft, bank, vehicles) |
-| F3 | Mouse cursor |
+| F1 | Galactic Information Network (MOTD / help) |
+| F2 | Manage / buy the structure (door) you are looking at |
+| F3 | Colony Datapad — missions, crafting, status, banking, governance, bounties |
+| F4 | Galactic Profession Terminal — professions, structures, vehicles, shipments, ammo |
 | TAB | Galactic Census scoreboard |
 
 ### Other
@@ -239,8 +283,9 @@ SWGRP.RegisterJob("Example", {
 | `swgrp_propcount` | 100 | Max props per player |
 | `swgrp_maxdoors` | 20 | Max owned doors |
 | `swgrp_hungerenabled` | 1 | Enable hunger system |
-| `swgrp_hungerrate` | 1 | Hunger loss per tick |
+| `swgrp_hungerrate` | 1 | Hunger loss per tick (every 30s) |
 | `swgrp_missioncooldown` | 120 | Seconds between missions |
+| `swgrp_sandbox_tools` | 1 | Sandbox tools: 0=off, 1=everyone, 2=FAdmin privilege only |
 
 ## Map Setup
 
@@ -299,6 +344,8 @@ Available hooks: `SWGRPCanChangeJob`, `SWGRPJobChanged`, `SWGRPPlayerPaid`, `SWG
 | `swgrp_mission_terminal` | Accept missions |
 | `swgrp_tipjar` | Credit tips for entertainers |
 | `swgrp_holo_sign` | Customizable RP sign |
+| `swgrp_keypad` | Security keypad linked to a door |
+| `swgrp_letter` | Galactic letter / mail entity |
 
 ## Weapons
 
@@ -310,19 +357,15 @@ Available hooks: `SWGRPCanChangeJob`, `SWGRPJobChanged`, `SWGRPPlayerPaid`, `SWG
 | `swgrp_arrest_baton` | Detain players |
 | `swgrp_unarrest_baton` | Release detainees |
 | `swgrp_stun_baton` | Stun players |
+| `swgrp_zip_tie` | Restrain a target (underworld) |
+| `swgrp_disguise` | Conceal identity (smuggler) |
+| `swgrp_keypad_cracker` | Crack security keypads (underworld) |
 
 ## Not Yet Implemented (vs full DarkRP)
 
-- FAdmin / FPP integration
-- Pocket inventory system
-- ULX command bridge
-- Model selector in F4
-- Advanced lockpick minigame UI
-- Door map entity configuration
-- Kidnapping / zip ties
-- Voteban
-- Letter entity mail system
-- Full CPPI/FPP parity
+- ULX/ULib command bridge (SWGRP ships **FAdmin** instead)
+- Full CPPI/FPP parity (basic prop ownership/limits only)
+- In-world door map entity configuration tool (jail/spawn set via `custom/` Lua)
 
 ## Credits
 
