@@ -1,0 +1,3 @@
+# name,ammo_type,model,price,amount,allowed,category
+# ammo_type = GMod ammo name (pistol smg1 ar2 etc.)
+name,ammo_type,model,price,amount,allowed,category

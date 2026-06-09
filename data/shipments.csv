@@ -1,0 +1,4 @@
+# name,model,preview_model,entities,price,amount,separate,price_separate,allowed,category
+# entities = pipe-separated weapon class names (e.g. weapon_pistol|weapon_smg1)
+# allowed = quoted comma-separated profession commands
+name,model,preview_model,entities,price,amount,separate,price_separate,allowed,category

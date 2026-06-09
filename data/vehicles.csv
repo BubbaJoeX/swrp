@@ -1,0 +1,4 @@
+# name,model,class,script,price,allowed,category
+# class = prop_vehicle_jeep or prop_vehicle_airboat
+# script = path under scripts/vehicles/
+name,model,class,script,price,allowed,category

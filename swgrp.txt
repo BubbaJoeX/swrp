@@ -1,0 +1,90 @@
+"swgrp"
+{
+	"base"		"sandbox"
+	"title"		"Star Wars Galaxies RP"
+	"category"	"rp"
+	"menusystem"	"1"
+	"settings"
+	{
+		1
+		{
+			"name"		"swgrp_startcredits"
+			"text"		"Starting Credits"
+			"help"		"Credits given to players on first join"
+			"type"		"Numeric"
+			"default"	"500"
+		}
+		2
+		{
+			"name"		"swgrp_paydayinterval"
+			"text"		"Payday Interval (seconds)"
+			"help"		"How often players receive their profession salary"
+			"type"		"Numeric"
+			"default"	"160"
+		}
+		3
+		{
+			"name"		"swgrp_taxenabled"
+			"text"		"Enable Imperial Tax"
+			"help"		"Governor collects tax on paychecks"
+			"type"		"CheckBox"
+			"default"	"1"
+		}
+		4
+		{
+			"name"		"swgrp_taxrate"
+			"text"		"Tax Rate"
+			"help"		"Fraction of salary taken as tax (0.05 = 5%)"
+			"type"		"Numeric"
+			"default"	"0.05"
+		}
+		5
+		{
+			"name"		"swgrp_propcount"
+			"text"		"Default Prop Limit"
+			"help"		"Maximum props per player"
+			"type"		"Numeric"
+			"default"	"100"
+		}
+		6
+		{
+			"name"		"swgrp_maxdoors"
+			"text"		"Max Doors Per Player"
+			"help"		"Maximum structure doors a player may own"
+			"type"		"Numeric"
+			"default"	"20"
+		}
+		7
+		{
+			"name"		"swgrp_hungerenabled"
+			"text"		"Enable Hunger System"
+			"help"		"Players must eat to survive"
+			"type"		"CheckBox"
+			"default"	"1"
+		}
+		8
+		{
+			"name"		"swgrp_hungerrate"
+			"text"		"Hunger Depletion Rate"
+			"help"		"Hunger lost per tick (every 30 seconds)"
+			"type"		"Numeric"
+			"default"	"1"
+		}
+		9
+		{
+			"name"		"swgrp_missioncooldown"
+			"text"		"Mission Cooldown (seconds)"
+			"help"		"Time between completing missions"
+			"type"		"Numeric"
+			"default"	"120"
+		}
+		10
+		{
+			"name"		"swgrp_sandbox_tools"
+			"text"		"Sandbox Tools Mode"
+			"help"		"0=off, 1=everyone (physgun/toolgun/gravgun), 2=FAdmin privilege only"
+			"type"		"Numeric"
+			"default"	"1"
+		}
+	}
+}
