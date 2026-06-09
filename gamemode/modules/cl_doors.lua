@@ -4,6 +4,7 @@
 
 SWGRP.Doors = SWGRP.Doors or {}
 SWGRP.Doors.ClientData = SWGRP.Doors.ClientData or {}
+SWGRP.Doors.NoBuy = SWGRP.Doors.NoBuy or {}
 
 local UI = SWGRP.UI or {}
 
@@ -35,10 +36,14 @@ net.Receive( "SWGRP_UpdateDoor", function()
 	local showLabel = net.ReadBool()
 	local flag = net.ReadString()
 	local owner = net.ReadEntity()
+	local groupControlled = net.ReadBool()
+	local groupLabel = net.ReadString()
 
-	if owned then
+	if owned or groupControlled then
 		SWGRP.Doors.ClientData[id] = {
-			owned = true,
+			owned = owned,
+			groupControlled = groupControlled,
+			group = groupLabel,
 			title = title,
 			locked = locked,
 			ownerSteamID = ownerSteamID,
@@ -53,25 +58,65 @@ net.Receive( "SWGRP_UpdateDoor", function()
 	end
 end )
 
+net.Receive( "SWGRP_DoorNoBuy", function()
+	local set = {}
+	local count = net.ReadUInt( 16 )
+	for _ = 1, count do
+		set[net.ReadUInt( 16 )] = true
+	end
+	SWGRP.Doors.NoBuy = set
+end )
+
 -- Draw a plate that is fitted to the door's face and sits flush on both sides
 -- so it never gets buried inside the door mesh. The plate content is authored in
 -- a virtual w x h canvas; this function scales it to the door's extents.
+--
+-- The door's facing direction is derived from its actual oriented bounding box
+-- (the thinnest axis is the face normal), so the plate orients correctly
+-- regardless of how the door entity itself is rotated.
 local function DrawDoorPlate( door, w, h, paint )
 	local mins, maxs = door:OBBMins(), door:OBBMaxs()
 	local size = maxs - mins
 	local center = door:LocalToWorld( ( mins + maxs ) * 0.5 )
-	local yaw = door:GetAngles().y
 
-	-- Door local axes: x = facing/thickness, y = width, z = height.
-	local doorWidth  = math.abs( size.y )
-	local doorHeight = math.abs( size.z )
-	local halfThick  = math.abs( size.x ) * 0.5
+	local function worldAxis( v )
+		return ( door:LocalToWorld( v ) - door:GetPos() ):GetNormalized()
+	end
+
+	local axes = {
+		{ len = math.abs( size.x ), dir = worldAxis( Vector( 1, 0, 0 ) ) },
+		{ len = math.abs( size.y ), dir = worldAxis( Vector( 0, 1, 0 ) ) },
+		{ len = math.abs( size.z ), dir = worldAxis( Vector( 0, 0, 1 ) ) },
+	}
+
+	-- Thinnest axis = the face normal; the other two are the visible face.
+	table.sort( axes, function( a, b ) return a.len < b.len end )
+	local normalAxis, faceA, faceB = axes[1], axes[2], axes[3]
+
+	-- Of the two face axes, the one most aligned with world up is the height.
+	local up = Vector( 0, 0, 1 )
+	local heightAxis, widthAxis
+	if math.abs( faceA.dir:Dot( up ) ) >= math.abs( faceB.dir:Dot( up ) ) then
+		heightAxis, widthAxis = faceA, faceB
+	else
+		heightAxis, widthAxis = faceB, faceA
+	end
+
+	local halfThick  = normalAxis.len * 0.5
+	local doorWidth  = widthAxis.len
+	local doorHeight = heightAxis.len
+
+	-- Facing direction comes from the real (thin-axis) normal rather than the
+	-- entity yaw, so doors whose thin axis isn't local-X still sit on the face
+	-- instead of bleeding onto the inner frame.
+	local yaw = normalAxis.dir:Angle().y
 
 	-- Fit the canvas inside the face with a margin, preserving aspect ratio.
 	local scale = math.min( ( doorWidth * 0.9 ) / w, ( doorHeight * 0.8 ) / h )
 	scale = math.Clamp( scale, 0.005, 0.12 )
 
-	-- Render on both faces, each pushed just clear of the mesh along its own normal.
+	-- Render on both faces. This angle construction keeps the text upright; only
+	-- the yaw/thickness inputs are derived from the OBB.
 	for _, side in ipairs( { 0, 180 } ) do
 		local drawAng = Angle( 0, yaw + side, 90 )
 		drawAng:RotateAroundAxis( drawAng:Right(), 90 )
@@ -141,6 +186,31 @@ local function DrawUnownedSign( door )
 	end )
 end
 
+local function DrawGroupSign( door, data )
+	local colors = DoorColors()
+	local w, h = 260, 96
+
+	DrawDoorPlate( door, w, h, function()
+		surface.SetDrawColor( colors.bg.r, colors.bg.g, colors.bg.b, 220 )
+		surface.DrawRect( -w / 2, -h / 2, w, h )
+
+		surface.SetDrawColor( colors.border )
+		surface.DrawOutlinedRect( -w / 2, -h / 2, w, h, 2 )
+
+		surface.SetDrawColor( colors.accent.r, colors.accent.g, colors.accent.b, 40 )
+		surface.DrawRect( -w / 2, -h / 2, w, 24 )
+
+		local group = UI.TruncateText and UI.TruncateText( data.group or "Faction", "DermaDefaultBold", w - 24 ) or ( data.group or "Faction" )
+
+		draw.SimpleText( group, "DermaDefaultBold", 0, -26, colors.primary, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER )
+		draw.SimpleText( "Faction Access Only", "DermaDefault", 0, 2, colors.secondary, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER )
+
+		if data.locked then
+			draw.SimpleText( "LOCKED", "DermaDefaultBold", 0, 28, colors.danger, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER )
+		end
+	end )
+end
+
 hook.Add( "PostDrawTranslucentRenderables", "SWGRP_DoorLabels", function( depth, skybox )
 	if skybox then return end
 
@@ -150,24 +220,30 @@ hook.Add( "PostDrawTranslucentRenderables", "SWGRP_DoorLabels", function( depth,
 	local eyePos = ply:EyePos()
 	local drawDist = 900 * 900
 
-	-- Owned structures: persistent plate on the master door.
+	-- Owned / faction structures: persistent plate on the master door.
 	for id, data in pairs( SWGRP.Doors.ClientData ) do
-		if data.owned and data.showLabel then
+		if data.showLabel then
 			local door = Entity( id )
 			if IsValid( door ) and door:isDoor() then
 				if door:GetPos():DistToSqr( eyePos ) <= drawDist then
-					DrawDoorSign( door, data )
+					if data.owned then
+						DrawDoorSign( door, data )
+					elseif data.groupControlled then
+						DrawGroupSign( door, data )
+					end
 				end
 			end
 		end
 	end
 
-	-- Unowned door the player is currently looking at gets a purchasable plate.
+	-- Unowned door the player is currently looking at gets a purchasable plate,
+	-- unless the door is owned, faction-controlled, or flagged non-purchasable.
 	local tr = ply:GetEyeTrace()
 	local ent = tr.Entity
 	if IsValid( ent ) and ent:isDoor() and tr.HitPos:DistToSqr( eyePos ) < 40000 then
 		local data = SWGRP.Doors.ClientData[ent:EntIndex()]
-		if not ( data and data.owned ) then
+		local restricted = SWGRP.Doors.NoBuy[ent:EntIndex()]
+		if not ( data and ( data.owned or data.groupControlled ) ) and not restricted then
 			DrawUnownedSign( ent )
 		end
 	end

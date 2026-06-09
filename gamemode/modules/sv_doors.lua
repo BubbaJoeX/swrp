@@ -334,11 +334,29 @@ function SWGRP.Doors.InitializeMap()
 		#SWGRP.Doors.LinkGroups,
 		table.Count( SWGRP.Doors.ButtonLinks )
 	) )
+
+	-- Let the admin tooling assign stable button ids and load persisted
+	-- button ownership / door map configuration after the base map is indexed.
+	hook.Run( "SWGRP_DoorsInitialized" )
 end
 
 function SWGRP.Doors.IsOwned( ent )
 	local d = SWGRP.Doors.GetMasterData( ent )
-	return d and d.ownerSteamID and d.ownerSteamID ~= ""
+	if not d then return false end
+	if d.groupOnly then return true end
+	return d.ownerSteamID ~= nil and d.ownerSteamID ~= ""
+end
+
+-- Admin-configured map state (whether players may purchase a given door).
+-- Defaults to ownable; the door tool can flag doors as non-purchasable.
+SWGRP.Doors.MapConfig = SWGRP.Doors.MapConfig or {}
+
+function SWGRP.Doors.IsOwnable( ent )
+	local mapId = SWGRP.Doors.GetSaveMapDoorId( ent )
+	if not mapId then return true end
+	local cfg = SWGRP.Doors.MapConfig[mapId]
+	if cfg and cfg.ownable == false then return false end
+	return true
 end
 
 function SWGRP.Doors.GetOwner( ent )
@@ -359,13 +377,8 @@ function SWGRP.Doors.CanAccess( ply, ent )
 	if d.ownerSteamID and d.ownerSteamID == ply:SteamID() then return true end
 	if d.coowners and d.coowners[ply:SteamID()] then return true end
 
-	if d.group then
-		local teams = SWGRP.DoorGroups[d.group] or SWGRP.Config.DoorGroups[d.group]
-		if teams then
-			for _, t in ipairs( teams ) do
-				if ply:Team() == t then return true end
-			end
-		end
+	if d.group and d.group ~= "" and SWGRP.Doors.PlayerInGroup( ply, d.group ) then
+		return true
 	end
 
 	if ply:SWGRP_IsGovernment() and d.allowGovernment ~= false then return true end
@@ -441,6 +454,10 @@ function SWGRP.Doors.Buy( ply, ent )
 	local master = SWGRP.Doors.GetMasterDoor( ent )
 	if SWGRP.Doors.IsOwned( master ) then
 		SWGRP.Notify( ply, "This structure is already owned." )
+		return
+	end
+	if not SWGRP.Doors.IsOwnable( master ) then
+		SWGRP.Notify( ply, "This structure cannot be purchased." )
 		return
 	end
 	if ply:SWGRP_GetDoorCount() >= SWGRP.Config.MaxDoors:GetInt() then
@@ -635,6 +652,8 @@ function SWGRP.Doors.Sync( ent )
 		else
 			net.WriteEntity( NULL )
 		end
+		net.WriteBool( d.groupOnly == true )
+		net.WriteString( d.groupOnly and SWGRP.Doors.GetGroupLabel( d.group ) or "" )
 	net.Broadcast()
 end
 
@@ -717,6 +736,16 @@ hook.Add( "PlayerUse", "SWGRP_DoorAccess", function( ply, ent )
 		return
 	end
 
+	-- Owned controls (buttons or prop_dynamic): a locked control only operates
+	-- for its owner / co-owners / government.
+	if SWGRP.Doors.IsButtonOwned and SWGRP.Doors.IsButtonOwned( ent ) then
+		local cd = SWGRP.Doors.GetButtonData( ent )
+		if cd and cd.locked and not SWGRP.Doors.CanAccessButton( ply, ent ) then
+			SWGRP.Notify( ply, "You do not have authority to operate this control." )
+			return false
+		end
+	end
+
 	if SWGRP.Doors.IsButton( ent ) then
 		if not SWGRP.Doors.CanUseButton( ply, ent ) then
 			SWGRP.Notify( ply, "You do not have authority to operate this control." )
@@ -750,8 +779,19 @@ function GM:ShowTeam( ply )
 
 	local tr = ply:GetEyeTrace()
 	local ent = tr.Entity
-	if not IsValid( ent ) or not ent:isDoor() then return end
+	if not IsValid( ent ) then return end
 	if tr.HitPos:DistToSqr( ply:GetShootPos() ) > 150 * 150 then return end
+
+	-- Controls (buttons / prop_dynamic) an admin marked ownable are managed
+	-- through the same key.
+	if SWGRP.Doors.IsControl( ent ) then
+		if SWGRP.Doors.ButtonShowTeam then
+			SWGRP.Doors.ButtonShowTeam( ply, ent )
+		end
+		return
+	end
+
+	if not ent:isDoor() then return end
 
 	if not SWGRP.Doors.IsOwned( ent ) then
 		SWGRP.Doors.Buy( ply, ent )

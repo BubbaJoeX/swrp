@@ -2,7 +2,7 @@ if SERVER then AddCSLuaFile() end
 
 SWEP.PrintName = "Structure Keys"
 SWEP.Author = "SWGRP"
-SWEP.Instructions = "Left click: Lock/Unlock door. Right click: Knock. (Press F2 to manage doors)"
+SWEP.Instructions = "Left click: Lock/Unlock door or owned control. Right click: Knock. (Press F2 to manage doors)"
 SWEP.Category = "SWGRP"
 SWEP.Spawnable = true
 SWEP.AdminOnly = false
@@ -38,10 +38,15 @@ function SWEP:PrimaryAttack()
 	self:SetNextPrimaryFire( CurTime() + 0.5 )
 
 	local tr = self.Owner:GetEyeTrace()
-	if not IsValid( tr.Entity ) or not tr.Entity:isDoor() then return end
+	local ent = tr.Entity
+	if not IsValid( ent ) then return end
 	if tr.HitPos:DistToSqr( self.Owner:GetShootPos() ) > 150 * 150 then return end
 
-	SWGRP.Doors.ToggleLock( self.Owner, tr.Entity )
+	if ent:isDoor() then
+		SWGRP.Doors.ToggleLock( self.Owner, ent )
+	elseif SWGRP.Doors.IsControl( ent ) and SWGRP.Doors.IsButtonOwned( ent ) then
+		SWGRP.Doors.ToggleControlLock( self.Owner, ent )
+	end
 end
 
 function SWEP:SecondaryAttack()

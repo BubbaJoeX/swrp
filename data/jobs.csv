@@ -2,19 +2,20 @@ name,command,category,allegiance,color,models,description,weapons,salary,max,adm
 Colonist,colonist,Civilians,NEUTRAL,20 150 20,models/player/group01/male_01.mdl|models/player/group01/male_02.mdl|models/player/group01/female_01.mdl,A common settler on this world. Work trade and survive.,,45,0,0,0,
 Refugee,refugee,Civilians,NEUTRAL,80 80 80,models/player/corpse1.mdl,Destitute and displaced. Scavenge to survive.,,0,0,0,0,hobo
 Merchant,merchant,Civilians,NEUTRAL,200 160 50,models/player/group01/male_03.mdl,Buy low sell high across the Outer Rim.,,55,4,0,0,
-Artisan,artisan,Civilians,NEUTRAL,180 120 60,models/player/group01/male_04.mdl,Craft goods and supply the colony economy.,,50,4,0,0,
+Artisan,artisan,Civilians,NEUTRAL,180 120 60,models/player/Group02/male_04.mdl,Craft goods and supply the colony economy.,,50,4,0,0,
 Entertainer,entertainer,Civilians,NEUTRAL,255 100 200,models/player/group01/female_02.mdl,Perform music and dance in cantinas across the galaxy.,,50,3,0,0,
-Cantina Operator,cantina,Civilians,NEUTRAL,200 100 50,models/player/group01/male_05.mdl,Serve refreshments. The heart of any spaceport.,,55,2,0,0,cook
-Doctor,doctor,Civilians,NEUTRAL,50 200 200,models/player/group01/male_06.mdl,Treat wounds and illness. A vital colony profession.,weapon_medkit,70,3,0,0,medic doctor
+Cantina Operator,cantina,Civilians,NEUTRAL,200 100 50,models/1/pm_scientist_human1.mdl,Serve refreshments. The heart of any spaceport.,,55,2,0,0,cook
+Doctor,doctor,Civilians,NEUTRAL,50 200 200,models/player/grady/starwars/duros_padawan.mdl,Treat wounds and illness. A vital colony profession.,weapon_medkit,70,3,0,0,medic doctor
 Smuggler,smuggler,Combat Professions,UNDERWORLD,150 50 200,models/player/group03/male_01.mdl,Move contraband through Imperial blockades.,weapon_pistol|swgrp_zip_tie|swgrp_disguise|swgrp_keypad_cracker,55,4,0,0,disguise
 Bounty Hunter,bountyhunter,Combat Professions,UNDERWORLD,200 50 50,models/urizel/ig11/ig11_player.mdl,Hunt targets with valid contracts.,weapon_pistol|swgrp_lockpick|swgrp_zip_tie|swgrp_keypad_cracker,60,3,0,0,bountyhunter
 Commando,commando,Combat Professions,UNDERWORLD,100 50 50,models/player/group03/male_02.mdl,Heavy weapons specialist. Frontline fighter.,weapon_smg1,65,3,0,1,
 Arms Dealer,armsdealer,Combat Professions,UNDERWORLD,200 150 50,models/byan7259/bodian_player/segular_rodian_player.mdl,Legally trade weapons with the proper permits.,,55,2,0,0,hasLicense
 Combat Medic,medic,Combat Professions,UNDERWORLD,50 200 100,models/player/group03/male_04.mdl,Field medic supporting combat operations.,weapon_medkit,65,3,0,0,medic
-Stormtrooper Captain,stormtroopercaptain,Imperial Forces,IMPERIAL,50 220 100,models/Player/SGG/Starwars/sandtrooper_semi.mdl,Oversee the Stormtrooper squadrons.,weapon_pistol|swgrp_arrest_baton|swgrp_stun_baton|swgrp_keys,95,4,0,1,captain
-Stormtrooper,stormtrooper,Imperial Forces,IMPERIAL,200 200 220,models/Player/SGG/Starwars/stormtrooper.mdl,Enforce Imperial law. Protect and serve the Empire.,weapon_pistol|swgrp_arrest_baton|swgrp_stun_baton|swgrp_keys,85,12,0,1,stormtrooper
-Imperial Officer,officer,Imperial Forces,IMPERIAL,150 150 200,models/player/combine_super_soldier.mdl,Command stormtroopers. Issue warrants and permits.,weapon_pistol|swgrp_arrest_baton|swgrp_unarrest_baton|swgrp_stun_baton|swgrp_keys,100,2,0,1,chief officer stormtrooper
-Security Commander,commander,Imperial Forces,IMPERIAL,100 100 180,models/player/combine_super_soldier.mdl,Head of planetary security forces.,weapon_smg1|swgrp_arrest_baton|swgrp_unarrest_baton|swgrp_stun_baton|swgrp_keys|swgrp_batteringram,110,1,0,1,chief commander stormtrooper
-Planetary Governor,governor,Imperial Forces,IMPERIAL,255 200 50,models/player/breen.mdl,Lead the colony. Set laws taxes and lockdowns.,,150,1,0,1,governor
-Rebel Soldier,rebel,Rebel Alliance,REBEL,200 60 60,models/player/group03/male_05.mdl,Fight the Empire. Covert resistance operative.,weapon_pistol,50,5,0,1,
-Rebel Pilot,rebelpilot,Rebel Alliance,REBEL,255 100 80,models/player/group03/male_06.mdl,Fly sorties and support the Rebellion.,weapon_pistol,60,2,0,1,
+Imperial Stormtrooper Captain,stormtroopercaptain,Imperial Forces,IMPERIAL,50 220 100,models/Player/SGG/Starwars/sandtrooper_semi.mdl,Oversee the Stormtrooper squadrons.,weapon_pistol|swgrp_arrest_baton|swgrp_stun_baton|swgrp_keys,95,4,0,1,captain
+Imperial Stormtrooper,stormtrooper,Imperial Forces,IMPERIAL,200 200 220,models/Player/SGG/Starwars/stormtrooper_color.mdl,Enforce Imperial law. Protect and serve the Empire.,weapon_pistol|swgrp_arrest_baton|swgrp_stun_baton|swgrp_keys,85,12,0,1,stormtrooper
+Imperial Officer,officer,Imperial Forces,IMPERIAL,150 150 200,models/nada/pms/male/admiral.mdl,Command stormtroopers. Issue warrants and permits.,weapon_pistol|swgrp_arrest_baton|swgrp_unarrest_baton|swgrp_stun_baton|swgrp_keys,100,2,0,1,chief officer stormtrooper
+Imperial Security Bureau,commander,Imperial Forces,IMPERIAL,100 100 180,models/nada/pms/male/groundcrew.mdl,Head of planetary security forces.,weapon_smg1|swgrp_arrest_baton|swgrp_unarrest_baton|swgrp_stun_baton|swgrp_keys|swgrp_batteringram,110,1,0,1,chief commander stormtrooper
+Imperial Royal Guard,royalguard,Imperial Forces,IMPERIAL,255 200 50,models/guard/guard.mdl,Lead the colony. Set laws taxes and lockdowns.,,150,1,0,1,governor
+Rebel Soldier,rebel,Rebel Alliance,REBEL,200 60 60,models/player/SGG/Starwars/Rebels/r_soldier_urban/male_04.mdl,Fight the Empire. Covert resistance operative.,weapon_pistol,50,5,0,1,
+Rebel Pilot,rebelpilot,Rebel Alliance,REBEL,255 100 80,models/player/SGG/Starwars/Rebels/r_soldier_urban/male_11.mdl,Fly sorties and support the Rebellion.,weapon_pistol,60,2,0,1,
+The Emperor,governor,Imperial Forces,IMPERIAL,255 200 50,models/konnie/swgoh/pack/palpatineemperor_eternal.mdl,Lead the colony. Set laws taxes and lockdowns.,,150,1,0,1,governor

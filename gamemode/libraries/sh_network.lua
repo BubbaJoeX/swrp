@@ -33,6 +33,11 @@ if SERVER then
 		"SWGRP_PocketOpen",
 		"SWGRP_ReloadContent",
 		"SWGRP_DoorAction",
+		"SWGRP_AdminDoorMenu",
+		"SWGRP_AdminDoorAction",
+		"SWGRP_AdminButtonMenu",
+		"SWGRP_AdminButtonAction",
+		"SWGRP_DoorNoBuy",
 	}
 
 	for _, name in ipairs( nets ) do
