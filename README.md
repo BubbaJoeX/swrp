@@ -36,6 +36,9 @@ swgrp/
 │   ├── server.cfg.example    # Example hostname, gamemode, loading URL
 │   ├── workshop.lua.example  # resource.AddWorkshop() template
 │   └── install_loadscreen.ps1
+├── tools/                    # Offline utilities
+│   ├── scan_gma_assets.py    # Match CSV/Lua assets to .gma Workshop addons
+│   └── README.md
 ├── data/                     # CSV content (master copies)
 │   ├── jobs.csv              # Professions
 │   ├── entities.csv          # Purchasable structures / equipment

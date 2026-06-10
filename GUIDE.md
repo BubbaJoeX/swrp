@@ -129,6 +129,16 @@ resource.AddWorkshop( "333333333" ) -- SW weapons
 
 Keep `workshop.lua` in sync whenever you add/remove addons from the collection.
 
+### 5. Scan Workshop addons against your CSV/Lua
+
+Use the bundled GMA scanner to see which subscribed addons cover your content references and what is still missing:
+
+```powershell
+python tools/scan_gma_assets.py --gma-dir "D:\SteamLibrary\steamapps\workshop\content\4000"
+```
+
+See **[tools/README.md](tools/README.md)** for options (`--json`, `--include-vanilla`).
+
 **Tips:**
 
 - You can only use **one** collection ID on the server — merge all content into a single collection.
