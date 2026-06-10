@@ -37,9 +37,6 @@ end
 function SWEP:Deploy()
 	if SERVER and IsValid( self:GetOwner() ) then
 		local owner = self:GetOwner()
-		owner:ChatPrint( "[SWGRP] Job spawn tool equipped." )
-		owner:ChatPrint( "[SWGRP] Left click: add spawn. Right click: menu. Reload: remove nearest." )
-
 		if SWGRP.JobSpawns and SWGRP.JobSpawns.SyncTo then
 			SWGRP.JobSpawns.SyncTo( owner, SWGRP.JobSpawns.GetSelectedCommand( owner ) )
 		end

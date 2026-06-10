@@ -13,3 +13,8 @@ swgrp_holo_sign,Holo-Sign,models/hunter/plates/plate1x1.mdl,75,4,buysign,*,Misc
 swgrp_letter,Datapad,models/swcw_items/sw_datapad.mdl,25,5,buyletter,*,Misc
 swgrp_keypad,Security Keypad,models/props_lab/keypad.mdl,150,8,buykeypad,*,Misc
 swgrp_spice_terminal,Spice Storage Terminal,models/props/starwars/vehicles/bd_dispenser.mdl,650,2,buyspiceterm,*,Commerce
+swgrp_casino_machine_s01,Casino Machine (Classic),models/props/starwars/tech/imp_datapad.mdl,800,2,buycasino1,"cantina",Commerce
+swgrp_casino_machine_s02,Casino Machine (Neon),models/props/starwars/tech/imp_datapad.mdl,900,2,buycasino2,"cantina",Commerce
+swgrp_credit_press_case,Credit Press Case,models/props_c17/suitcase_passenger_physics.mdl,400,2,buypresscase,*,Commerce
+swgrp_vehicle_license,Vehicle License,models/lordtrilobite/starwars/props/imp_datatape.mdl,150,1,buyvehlicense,"governor,officer,stormtroopercaptain",Misc
+swgrp_weapon_license,Weapon License,models/lordtrilobite/starwars/props/imp_datatape.mdl,150,1,buyweaponlicense,"governor,officer,stormtroopercaptain,armsdealer",Misc

@@ -52,6 +52,7 @@ function SWGRP.DB.Initialize()
 	SWGRP_DB_AddColumn( "swgrp_players", "mission_cooldown", "INTEGER DEFAULT 0" )
 	SWGRP_DB_AddColumn( "swgrp_players", "job_models", "TEXT DEFAULT '{}'" )
 	SWGRP_DB_AddColumn( "swgrp_players", "pocket", "TEXT DEFAULT ''" )
+	SWGRP_DB_AddColumn( "swgrp_players", "vehicle_license", "INTEGER DEFAULT 0" )
 
 	sql.Query( [[CREATE TABLE IF NOT EXISTS swgrp_doors (
 		map TEXT,
@@ -207,6 +208,7 @@ function SWGRP.DB.LoadPlayer( ply )
 	if row then
 		ply:SWGRP_SetCredits( tonumber( row.credits ) or SWGRP.Config.StartCredits:GetInt() )
 		ply:SWGRP_SetLicense( tonumber( row.license ) == 1 )
+		ply:SWGRP_SetVehicleLicense( tonumber( row.vehicle_license ) == 1 )
 		ply.SWGRP_LastTeam = tonumber( row.last_team ) or TEAM_COLONIST
 
 		ply.SWGRP_BankBalance = tonumber( row.bank ) or 0
@@ -237,6 +239,7 @@ function SWGRP.DB.LoadPlayer( ply )
 	else
 		ply:SWGRP_SetCredits( SWGRP.Config.StartCredits:GetInt() )
 		ply:SWGRP_SetLicense( false )
+		ply:SWGRP_SetVehicleLicense( false )
 		ply.SWGRP_LastTeam = TEAM_COLONIST
 		ply.SWGRP_BankBalance = 0
 		ply:SetNWInt( "SWGRP_Bank", 0 )
@@ -288,15 +291,16 @@ function SWGRP.DB.SavePlayer( ply )
 
 	sql.Query( string.format(
 		[[REPLACE INTO swgrp_players
-		(steamid, credits, license, last_team, bank, hunger,
+		(steamid, credits, license, vehicle_license, last_team, bank, hunger,
 		 faction_imperial, faction_rebel, faction_underworld,
 		 prof_xp, materials, contraband, job_models, pocket,
 		 wanted, wanted_reason, wanted_expire, arrested, arrest_expire,
 		 mission_id, mission_progress, mission_deadline, mission_cooldown)
-		VALUES (%s, %d, %d, %d, %d, %d, %d, %d, %d, %s, %s, %s, %s, %s, %d, %s, %d, %d, %d, %d, %d, %d, %d)]],
+		VALUES (%s, %d, %d, %d, %d, %d, %d, %d, %d, %d, %s, %s, %s, %s, %s, %d, %s, %d, %d, %d, %d, %d, %d, %d)]],
 		sid,
 		ply:SWGRP_GetCredits(),
 		ply:SWGRP_HasLicense() and 1 or 0,
+		ply:SWGRP_HasVehicleLicense() and 1 or 0,
 		ply:Team(),
 		ply.SWGRP_BankBalance or 0,
 		SWGRP.Hunger.Get( ply ),

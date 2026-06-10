@@ -13,6 +13,10 @@ function meta:SWGRP_HasLicense()
 	return self:GetNWBool( "SWGRP_License", false )
 end
 
+function meta:SWGRP_HasVehicleLicense()
+	return self:GetNWBool( "SWGRP_VehicleLicense", false )
+end
+
 function meta:SWGRP_IsWanted()
 	return self:GetNWBool( "SWGRP_Wanted", false )
 end
@@ -126,6 +130,11 @@ if SERVER then
 
 	function meta:SWGRP_SetLicense( state )
 		self:SetNWBool( "SWGRP_License", state )
+		if SWGRP.Persistence then SWGRP.Persistence.ScheduleSave( self ) end
+	end
+
+	function meta:SWGRP_SetVehicleLicense( state )
+		self:SetNWBool( "SWGRP_VehicleLicense", state )
 		if SWGRP.Persistence then SWGRP.Persistence.ScheduleSave( self ) end
 	end
 

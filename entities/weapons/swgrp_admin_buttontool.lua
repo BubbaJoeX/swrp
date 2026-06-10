@@ -35,9 +35,6 @@ function SWEP:Initialize()
 end
 
 function SWEP:Deploy()
-	if SERVER and IsValid( self:GetOwner() ) then
-		self:GetOwner():ChatPrint( "[SWGRP] Control tool equipped. Left-click a map button or prop." )
-	end
 	return true
 end
 

@@ -88,11 +88,33 @@ local function OpenAdminDoorMenu( door, title, ownerName, locked, ownable, group
 		menu:AddOption( "None", function()
 			SendDoorAdmin( door, "group", function() net.WriteString( "" ) end )
 		end )
+
+		local allegianceMenu = menu:AddSubMenu( "Factions (allegiance)" )
+		local jobMenu = menu:AddSubMenu( "Jobs (profession)" )
+		local customMenu = menu:AddSubMenu( "Custom groups" )
+
+		local hasAllegiance, hasJobs, hasCustom = false, false, false
 		for _, g in ipairs( SWGRP.Doors.GetGroupList() ) do
-			menu:AddOption( g.label, function()
+			local pick = function()
 				SendDoorAdmin( door, "group", function() net.WriteString( g.key ) end )
-			end )
+			end
+
+			if g.kind == "allegiance" then
+				allegianceMenu:AddOption( g.label, pick )
+				hasAllegiance = true
+			elseif g.kind == "job" then
+				jobMenu:AddOption( g.label, pick )
+				hasJobs = true
+			else
+				customMenu:AddOption( g.label, pick )
+				hasCustom = true
+			end
 		end
+
+		if not hasAllegiance then allegianceMenu:AddOption( "(none)", function() end ) end
+		if not hasJobs then jobMenu:AddOption( "(none)", function() end ) end
+		if not hasCustom then customMenu:AddOption( "(none)", function() end ) end
+
 		menu:Open()
 	end )
 

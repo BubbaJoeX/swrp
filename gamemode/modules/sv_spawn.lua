@@ -20,7 +20,39 @@ local function SWGRP_GiveAmmoForWeapons( ply )
 	end
 end
 
-function SWGRP.GiveJobLoadout( ply )
+function SWGRP.BuildAllowedLoadout( ply )
+	local allowed = {}
+	local cfg = GAMEMODE.Config or SWGRP.Config or {}
+
+	local function add( class )
+		if class and class ~= "" then
+			allowed[class] = true
+		end
+	end
+
+	add( "swgrp_keys" )
+
+	local job = SWGRP.GetJob( ply:Team() )
+	if job and job.weapons then
+		for _, wep in ipairs( job.weapons ) do
+			add( wep )
+		end
+	end
+
+	for _, wep in ipairs( cfg.DefaultWeapons or {} ) do
+		add( wep )
+	end
+
+	if ply:IsAdmin() then
+		for _, wep in ipairs( cfg.AdminWeapons or {} ) do
+			add( wep )
+		end
+	end
+
+	return allowed, job, cfg
+end
+
+function SWGRP.EnforceLoadout( ply )
 	if not IsValid( ply ) then return end
 
 	if ply:SWGRP_IsArrested() or ply:SWGRP_IsRestrained() then
@@ -29,12 +61,17 @@ function SWGRP.GiveJobLoadout( ply )
 		return
 	end
 
-	-- Everyone always carries their keys.
-	if not ply:HasWeapon( "swgrp_keys" ) then
-		ply:Give( "swgrp_keys" )
+	local allowed, job, cfg = SWGRP.BuildAllowedLoadout( ply )
+
+	-- Remove anything not on the loadout whitelist (Q-menu spawns, save restores, etc.)
+	for _, wep in ipairs( ply:GetWeapons() ) do
+		if not allowed[wep:GetClass()] then
+			ply:StripWeapon( wep:GetClass() )
+		end
 	end
 
-	local job = SWGRP.GetJob( ply:Team() )
+	ply:Give( "swgrp_keys" )
+
 	if job and job.weapons then
 		for _, wep in ipairs( job.weapons ) do
 			if not ply:HasWeapon( wep ) then
@@ -49,36 +86,69 @@ function SWGRP.GiveJobLoadout( ply )
 		end
 	end
 
-	for _, wep in pairs( GAMEMODE.Config.DefaultWeapons or {} ) do
+	for _, wep in ipairs( cfg.DefaultWeapons or {} ) do
 		if not ply:HasWeapon( wep ) then
 			ply:Give( wep )
 		end
 	end
 
-	CAMI.PlayerHasAccess( ply, "SWGRP_GetAdminWeapons", function( access )
-		if not access or not IsValid( ply ) then return end
+	local function finalizeLoadout()
+		if not IsValid( ply ) then return end
 
-		for _, wep in pairs( GAMEMODE.Config.AdminWeapons or {} ) do
-			if not ply:HasWeapon( wep ) then
-				ply:Give( wep )
+		SWGRP_GiveAmmoForWeapons( ply )
+
+		if SWGRP.Pocket and SWGRP.Pocket.Restore then
+			SWGRP.Pocket.Restore( ply )
+		end
+
+		if SWGRP.GiveSandboxTools then
+			SWGRP.GiveSandboxTools( ply )
+		end
+
+		for _, wep in ipairs( ply:GetWeapons() ) do
+			if not allowed[wep:GetClass()] then
+				ply:StripWeapon( wep:GetClass() )
 			end
 		end
-	end )
 
-	SWGRP_GiveAmmoForWeapons( ply )
-
-	if SWGRP.Pocket and SWGRP.Pocket.Restore then
-		SWGRP.Pocket.Restore( ply )
+		if ply:HasWeapon( "swgrp_keys" ) then
+			ply:SelectWeapon( "swgrp_keys" )
+		elseif #ply:GetWeapons() > 0 then
+			ply:SwitchToDefaultWeapon()
+		end
 	end
 
-	if SWGRP.GiveSandboxTools then
-		SWGRP.GiveSandboxTools( ply )
+	if CAMI and CAMI.PlayerHasAccess then
+		CAMI.PlayerHasAccess( ply, "SWGRP_GetAdminWeapons", function( access )
+			if not IsValid( ply ) then return end
+			if access then
+				for _, wep in ipairs( cfg.AdminWeapons or {} ) do
+					allowed[wep] = true
+					if not ply:HasWeapon( wep ) then
+						ply:Give( wep )
+					end
+				end
+			end
+			finalizeLoadout()
+		end )
+	else
+		giveAdminWeapons( ply:IsAdmin() )
+		finalizeLoadout()
 	end
+end
 
-	if ply:HasWeapon( "swgrp_keys" ) then
-		ply:SelectWeapon( "swgrp_keys" )
-	elseif #ply:GetWeapons() > 0 then
-		ply:SwitchToDefaultWeapon()
+function SWGRP.GiveJobLoadout( ply )
+	SWGRP.EnforceLoadout( ply )
+end
+
+local function SWGRP_ScheduleLoadoutEnforce( ply )
+	if not IsValid( ply ) then return end
+	for _, delay in ipairs( { 0, 0.25, 1, 3 } ) do
+		timer.Simple( delay, function()
+			if IsValid( ply ) and ply:Alive() then
+				SWGRP.EnforceLoadout( ply )
+			end
+		end )
 	end
 end
 
@@ -87,8 +157,32 @@ function GM:PlayerLoadout( ply )
 	SWGRP.GiveJobLoadout( ply )
 end
 
-function GM:PlayerSpawn( ply )
+-- Run gamemode_base PlayerSpawn (unspectate, loadout, model). Must not call
+-- gamemode_sandbox.PlayerSpawn — that resets the player class to player_sandbox.
+local function SWGRP_RunBasePlayerSpawn( ply, transition )
+	local gm = GAMEMODE or GM
+	local baseSpawn = gm.Sandbox and gm.Sandbox.BaseClass and gm.Sandbox.BaseClass.PlayerSpawn
+
+	if baseSpawn then
+		baseSpawn( gm, ply, transition )
+		-- Base spawn skips loadout on map transitions; SWGRP always reapplies weapons.
+		if transition then
+			hook.Call( "PlayerLoadout", gm, ply )
+		end
+		return
+	end
+
+	ply:UnSpectate()
+	player_manager.OnPlayerSpawn( ply, transition )
+	player_manager.RunClass( ply, "Spawn" )
+	hook.Call( "PlayerLoadout", gm, ply )
+	hook.Call( "PlayerSetModel", gm, ply )
+	ply:SetupHands()
+end
+
+function GM:PlayerSpawn( ply, transition )
 	player_manager.SetPlayerClass( ply, "player_swgrp" )
+	SWGRP_RunBasePlayerSpawn( ply, transition )
 
 	local job = SWGRP.GetJob( ply:Team() )
 	if job and job.PlayerSpawn then
@@ -99,18 +193,43 @@ function GM:PlayerSpawn( ply )
 	ply:SetArmor( 0 )
 end
 
+local function SWGRP_AssignTeam( ply )
+	local teamId = ply.SWGRP_LastTeam or TEAM_COLONIST
+	if SWGRP.Jobs[teamId] then
+		ply:SetTeam( teamId )
+	else
+		ply:SetTeam( TEAM_COLONIST )
+	end
+end
+
 hook.Add( "PlayerInitialSpawn", "SWGRP_LoadPlayer", function( ply )
 	SWGRP.DB.LoadPlayer( ply )
 	ply.SWGRP_PropCount = 0
 	ply.SWGRP_DoorCount = 0
 
-	timer.Simple( 0, function()
-		if not IsValid( ply ) then return end
-		local teamId = ply.SWGRP_LastTeam or TEAM_COLONIST
-		if SWGRP.Jobs[teamId] then
-			ply:SetTeam( teamId )
-		else
-			ply:SetTeam( TEAM_COLONIST )
+	-- SQLite may still hold pocket weapons from a prior session; drop them on join.
+	if SWGRP.Pocket and SWGRP.Pocket.ClearWeaponSlots then
+		SWGRP.Pocket.ClearWeaponSlots( ply )
+	end
+
+	-- Assign profession before the first PlayerSpawn/PlayerLoadout so job weapons apply.
+	SWGRP_AssignTeam( ply )
+
+	-- Singleplayer saves / late entity restores can re-add weapons after spawn.
+	SWGRP_ScheduleLoadoutEnforce( ply )
+end )
+
+hook.Add( "PlayerSpawn", "SWGRP_EnforceLoadoutDeferred", function( ply )
+	SWGRP_ScheduleLoadoutEnforce( ply )
+end )
+
+-- gm_save / continue loads can restore weapons after PlayerLoadout runs.
+hook.Add( "LoadGModSave", "SWGRP_EnforceLoadoutAfterSave", function()
+	timer.Simple( 0.5, function()
+		for _, ply in ipairs( player.GetAll() ) do
+			if IsValid( ply ) then
+				SWGRP.EnforceLoadout( ply )
+			end
 		end
 	end )
 end )

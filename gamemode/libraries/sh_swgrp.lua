@@ -203,16 +203,29 @@ function SWGRP.FormatCredits( amount )
 end
 
 function SWGRP.Notify( ply, msg, msgType )
+	msgType = msgType or 0
+
 	if SERVER then
 		if IsValid( ply ) then
-			ply:ChatPrint( "[SWGRP] " .. msg )
+			net.Start( "SWGRP_Notify" )
+				SWGRP.NetWriteNotify( msg, msgType )
+			net.Send( ply )
 		else
-			for _, p in ipairs( player.GetAll() ) do
-				p:ChatPrint( "[SWGRP] " .. msg )
-			end
+			net.Start( "SWGRP_Notify" )
+				SWGRP.NetWriteNotify( msg, msgType )
+			net.Broadcast()
 		end
 	else
-		chat.AddText( SWGRP.Config.HUDColorPrimary, "[SWGRP] ", color_white, msg )
+		local col = SWGRP.Config.HUDColorAccent
+		if msgType == 1 then
+			col = SWGRP.Config.HUDColorDanger
+		end
+
+		if SWGRP.UI and SWGRP.UI.HUD and SWGRP.UI.HUD.Toast then
+			SWGRP.UI.HUD.Toast( msg, 3.5, col )
+		else
+			chat.AddText( SWGRP.Config.HUDColorPrimary, "[SWGRP] ", color_white, msg )
+		end
 	end
 end
 

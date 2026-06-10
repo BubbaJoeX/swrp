@@ -1,9 +1,9 @@
 if SERVER then AddCSLuaFile() end
 
 SWEP.Base = "weapon_base"
-SWEP.PrintName = "Door Admin Tool"
+SWEP.PrintName = "Ownership Changer"
 SWEP.Author = "SWGRP"
-SWEP.Instructions = "Left click a door to open its admin configuration menu."
+SWEP.Instructions = "Left click an entity or prop to change ownership."
 SWEP.Category = "SWGRP"
 SWEP.Spawnable = true
 SWEP.AdminOnly = true
@@ -22,7 +22,7 @@ SWEP.Weight = 1
 SWEP.AutoSwitchTo = false
 SWEP.AutoSwitchFrom = false
 SWEP.Slot = 1
-SWEP.SlotPos = 2
+SWEP.SlotPos = 8
 SWEP.DrawAmmo = false
 SWEP.DrawCrosshair = true
 SWEP.ViewModel = "models/weapons/c_toolgun.mdl"
@@ -34,22 +34,11 @@ function SWEP:Initialize()
 	self:SetHoldType( self.HoldType )
 end
 
-function SWEP:Deploy()
-	return true
-end
-
 function SWEP:PrimaryAttack()
 	self:SetNextPrimaryFire( CurTime() + 0.4 )
 	if CLIENT then return end
-
-	local owner = self:GetOwner()
-	if not IsValid( owner ) then owner = self.Owner end
-	if not IsValid( owner ) then return end
-
-	if SWGRP.Doors and SWGRP.Doors.AdminDoorToolUse then
-		SWGRP.Doors.AdminDoorToolUse( owner )
-	else
-		owner:ChatPrint( "[SWGRP] Door tool: server module not loaded. Restart the map/server." )
+	if SWGRP.OwnershipTool and SWGRP.OwnershipTool.AdminToolPrimary then
+		SWGRP.OwnershipTool.AdminToolPrimary( self:GetOwner() )
 	end
 end
 

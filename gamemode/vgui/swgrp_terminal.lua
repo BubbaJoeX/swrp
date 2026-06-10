@@ -813,3 +813,121 @@ function UI.OpenJobModelPicker( job, onConfirm )
 		cancel:Dock( BOTTOM )
 	end
 end
+
+--[[---------------------------------------------------------------------------
+    HUD drawing helpers (client)
+---------------------------------------------------------------------------]]
+
+if CLIENT then
+	UI.HUD = UI.HUD or {}
+
+	local HUD = UI.HUD
+
+	function HUD.EnsureFonts()
+		if HUD._fontsReady then return end
+		HUD._fontsReady = true
+
+		surface.CreateFont( "SWGRP_HUD_Title", {
+			font = "Tahoma", size = 18, weight = 800, antialias = true, extended = true,
+		} )
+		surface.CreateFont( "SWGRP_HUD_Subtitle", {
+			font = "Tahoma", size = 14, weight = 700, antialias = true, extended = true,
+		} )
+		surface.CreateFont( "SWGRP_HUD_Body", {
+			font = "Tahoma", size = 13, weight = 500, antialias = true, extended = true,
+		} )
+		surface.CreateFont( "SWGRP_HUD_Small", {
+			font = "Tahoma", size = 11, weight = 600, antialias = true, extended = true,
+		} )
+		surface.CreateFont( "SWGRP_HUD_Micro", {
+			font = "Tahoma", size = 10, weight = 700, antialias = true, extended = true,
+		} )
+	end
+
+	function HUD.Sync()
+		UI.SyncColors()
+		HUD.EnsureFonts()
+	end
+
+	function HUD.TextShadow( text, font, x, y, col, ax, ay )
+		draw.SimpleText( text, font, x + 1, y + 1, Color( 0, 0, 0, 140 ), ax, ay )
+		draw.SimpleText( text, font, x, y, col, ax, ay )
+	end
+
+	function HUD.DrawPanel( x, y, w, h, alpha )
+		HUD.Sync()
+		alpha = alpha or 220
+		local bg = UI.Colors.bg
+		draw.RoundedBox( 6, x, y, w, h, Color( bg.r, bg.g, bg.b, alpha ) )
+		surface.SetDrawColor( UI.Colors.borderDim.r, UI.Colors.borderDim.g, UI.Colors.borderDim.b, math.min( alpha, 160 ) )
+		surface.DrawOutlinedRect( x, y, w, h, 1 )
+		surface.SetDrawColor( UI.Colors.primary.r, UI.Colors.primary.g, UI.Colors.primary.b, math.min( alpha, 90 ) )
+		surface.DrawRect( x + 1, y + 1, w - 2, 2 )
+	end
+
+	function HUD.DrawHeader( x, y, w, text, alpha )
+		HUD.Sync()
+		alpha = alpha or 230
+		surface.SetDrawColor( UI.Colors.bgLight.r, UI.Colors.bgLight.g, UI.Colors.bgLight.b, alpha )
+		surface.DrawRect( x, y, w, 22 )
+		surface.SetDrawColor( UI.Colors.borderDim.r, UI.Colors.borderDim.g, UI.Colors.borderDim.b, math.min( alpha, 140 ) )
+		surface.DrawLine( x, y + 22, x + w, y + 22 )
+		HUD.TextShadow( text, "SWGRP_HUD_Subtitle", x + 10, y + 11, UI.Colors.primary, TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER )
+	end
+
+	function HUD.DrawStatBar( x, y, w, h, frac, fillCol, label )
+		HUD.Sync()
+		frac = math.Clamp( frac, 0, 1 )
+
+		draw.RoundedBox( 4, x, y, w, h, Color( 0, 0, 0, 160 ) )
+		if frac > 0 then
+			draw.RoundedBox( 4, x + 1, y + 1, math.max( 4, math.floor( ( w - 2 ) * frac ) ), h - 2, fillCol )
+		end
+		surface.SetDrawColor( UI.Colors.borderDim.r, UI.Colors.borderDim.g, UI.Colors.borderDim.b, 120 )
+		surface.DrawOutlinedRect( x, y, w, h, 1 )
+		HUD.TextShadow( label, "SWGRP_HUD_Small", x + 8, y + h / 2, Color( 245, 245, 245 ), TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER )
+	end
+
+	HUD.Toasts = HUD.Toasts or {}
+
+	function HUD.Toast( msg, duration, col )
+		if not msg or msg == "" then return end
+		table.insert( HUD.Toasts, {
+			text = msg,
+			expire = CurTime() + ( duration or 3.5 ),
+			color = col or UI.Colors.accent,
+		} )
+	end
+
+	function HUD.DrawToasts()
+		if #HUD.Toasts == 0 then return end
+		HUD.Sync()
+
+		local scrW = ScrW()
+		local y = 118
+		local now = CurTime()
+
+		for i = #HUD.Toasts, 1, -1 do
+			local t = HUD.Toasts[i]
+			if now >= t.expire then
+				table.remove( HUD.Toasts, i )
+			end
+		end
+
+		for _, t in ipairs( HUD.Toasts ) do
+			surface.SetFont( "SWGRP_HUD_Body" )
+			local tw = surface.GetTextSize( t.text )
+			local w = math.min( scrW * 0.5, tw + 28 )
+			local x = scrW * 0.5 - w * 0.5
+			local life = t.expire - now
+			local alpha = math.Clamp( life, 0, 1 ) * 230
+			if life > 3 then alpha = 230 end
+
+			draw.RoundedBox( 6, x, y, w, 28, Color( 10, 15, 25, alpha ) )
+			surface.SetDrawColor( t.color.r, t.color.g, t.color.b, alpha )
+			surface.DrawOutlinedRect( x, y, w, 28, 1 )
+			HUD.TextShadow( t.text, "SWGRP_HUD_Body", x + w / 2, y + 14, Color( 255, 255, 255, alpha ), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER )
+			y = y + 32
+		end
+	end
+end

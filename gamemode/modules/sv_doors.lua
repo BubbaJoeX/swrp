@@ -319,12 +319,20 @@ function SWGRP.Doors.InitializeMap()
 	SWGRP.Doors.LinkByTargetName()
 	SWGRP.Doors.LinkByProximity()
 	SWGRP.Doors.IndexButtons()
+	SWGRP.Doors.BuildAutoOpenIndex()
 	SWGRP.Doors.LoadFromDatabase()
 
-	print( string.format( "[SWGRP] Door map init: %d doors, %d link groups, %d buttons indexed.",
+	for _, door in ipairs( SWGRP.Doors.MapDoors ) do
+		if IsValid( door ) and not SWGRP.Doors.GetData( door ) then
+			SWGRP.Doors.RefreshEngineLock( door, false )
+		end
+	end
+
+	print( string.format( "[SWGRP] Door map init: %d doors, %d link groups, %d buttons indexed, %d auto-open.",
 		#SWGRP.Doors.MapDoors,
 		#SWGRP.Doors.LinkGroups,
-		table.Count( SWGRP.Doors.ButtonLinks )
+		table.Count( SWGRP.Doors.ButtonLinks ),
+		table.Count( SWGRP.Doors.AutoOpenIds or {} )
 	) )
 
 	-- Let the admin tooling assign stable button ids and load persisted
@@ -428,6 +436,104 @@ function SWGRP.Doors.RefreshEngineLock( door, locked )
 	if locked then door:Fire( "Close" ) end
 	door:Fire( "UnLock" )
 	door:Fire( "Unlock" )
+end
+
+-- Map doors wired to triggers / logic (detected at init or learned at runtime).
+SWGRP.Doors.AutoOpenIds = SWGRP.Doors.AutoOpenIds or {}
+
+SWGRP.Doors.AutoOpenSourceClasses = {
+	["trigger_multiple"] = true,
+	["trigger_once"] = true,
+	["trigger_proximity"] = true,
+	["trigger_teleport"] = true,
+	["logic_auto"] = true,
+	["logic_relay"] = true,
+	["logic_timer"] = true,
+	["math_counter"] = true,
+}
+
+function SWGRP.Doors.MarkAutoOpen( ent )
+	if not IsValid( ent ) then return end
+	SWGRP.Doors.AutoOpenIds[SWGRP.Doors.GetID( ent )] = true
+end
+
+function SWGRP.Doors.IsAutoOpen( ent )
+	if not IsValid( ent ) then return false end
+	return SWGRP.Doors.AutoOpenIds[SWGRP.Doors.GetID( ent )] == true
+end
+
+function SWGRP.Doors.IsAutoOpenSource( ent )
+	if not IsValid( ent ) then return false end
+	return SWGRP.Doors.AutoOpenSourceClasses[ent:GetClass()] == true
+end
+
+function SWGRP.Doors.IsPlayerInvolved( activator, caller )
+	if IsValid( activator ) and activator:IsPlayer() then return true end
+	if IsValid( caller ) and caller:IsPlayer() then return true end
+	return false
+end
+
+function SWGRP.Doors.ParseOutputTarget( outputStr )
+	if not outputStr or outputStr == "" then return nil end
+	local target = string.match( outputStr, "^%s*([^,]+)" )
+	if not target then return nil end
+	target = string.gsub( target, "^%s+", "" )
+	target = string.gsub( target, "%s+$", "" )
+	return target ~= "" and target or nil
+end
+
+function SWGRP.Doors.BuildAutoOpenIndex()
+	SWGRP.Doors.AutoOpenIds = {}
+	local doorsByName = {}
+
+	for _, door in ipairs( SWGRP.Doors.MapDoors ) do
+		if not IsValid( door ) then continue end
+
+		local name = door:GetName()
+		if name and name ~= "" then
+			doorsByName[name] = doorsByName[name] or {}
+			table.insert( doorsByName[name], door )
+		end
+
+		if bit.band( door:GetSpawnFlags(), 1 ) ~= 0 then
+			SWGRP.Doors.MarkAutoOpen( door )
+		end
+	end
+
+	local function markName( targetName )
+		if not targetName then return end
+		local list = doorsByName[targetName]
+		if not list then return end
+		for _, door in ipairs( list ) do
+			SWGRP.Doors.MarkAutoOpen( door )
+		end
+	end
+
+	local function scanOutputs( kv )
+		if not kv then return end
+		for key, val in pairs( kv ) do
+			if string.sub( key, 1, 2 ) ~= "On" then continue end
+			if not isstring( val ) or val == "" then continue end
+
+			for segment in string.gmatch( val, "[^;]+" ) do
+				markName( SWGRP.Doors.ParseOutputTarget( segment ) )
+			end
+		end
+	end
+
+	for _, ent in ipairs( ents.GetAll() ) do
+		if not IsValid( ent ) then continue end
+		local cls = ent:GetClass()
+		if not SWGRP.Doors.AutoOpenSourceClasses[cls] and not SWGRP.Doors.ButtonClasses[cls] then continue end
+		scanOutputs( ent.GetKeyValues and ent:GetKeyValues() )
+	end
+end
+
+function SWGRP.Doors.PlayerTryUse( door, ply )
+	if not IsValid( door ) or not IsValid( ply ) then return end
+
+	SWGRP.Doors.RefreshEngineLock( door, false )
+	door:Fire( "Toggle" )
 end
 
 function SWGRP.Doors.SetLockState( ent, locked, ply )
@@ -698,12 +804,10 @@ hook.Add( "PlayerInitialSpawn", "SWGRP_DoorSync", function( ply )
 	end )
 end )
 
--- Stop doors from opening automatically (proximity triggers, NPCs, logic, etc.).
--- Direct +USE on a door is handled internally by the engine and does not pass
--- through AcceptInput, so this only suppresses scripted/automatic opens. Buttons
--- the gamemode tracks are still allowed to drive their linked doors.
+-- Suppress unsolicited trigger/NPC opens on player-owned locked doors. Unowned
+-- doors, map auto-open doors, player +USE, and linked buttons always work.
 SWGRP.Config.DisableDoorAutoOpen = CreateConVar( "swgrp_doors_disableautoopen", "1",
-	FCVAR_ARCHIVE, "Prevent doors from opening automatically (triggers/NPCs)." )
+	FCVAR_ARCHIVE, "Block trigger/NPC opens on owned locked doors (not map auto-doors)." )
 
 local AUTO_OPEN_INPUTS = {
 	open = true,
@@ -712,17 +816,28 @@ local AUTO_OPEN_INPUTS = {
 }
 
 hook.Add( "AcceptInput", "SWGRP_DoorNoAutoOpen", function( ent, input, activator, caller )
-	if not SWGRP.Config.DisableDoorAutoOpen:GetBool() then return end
 	if not SWGRP.Doors.Classes[ent:GetClass()] then return end
-	if not AUTO_OPEN_INPUTS[string.lower( input )] then return end
 
-	-- Allow opens driven by a button the door system manages.
+	input = string.lower( input or "" )
+	if not AUTO_OPEN_INPUTS[input] then return end
+
+	if SWGRP.Doors.IsPlayerInvolved( activator, caller ) then return end
+
 	if IsValid( caller ) and SWGRP.Doors.IsButton( caller ) then return end
 
-	-- Allow a player directly operating the door (no intermediary entity).
-	if IsValid( activator ) and activator:IsPlayer() and not IsValid( caller ) then return end
+	if SWGRP.Doors.IsAutoOpenSource( activator ) or SWGRP.Doors.IsAutoOpenSource( caller ) then
+		SWGRP.Doors.MarkAutoOpen( ent )
+		return
+	end
 
-	-- Block everything else (proximity triggers, NPCs, map logic).
+	if SWGRP.Doors.IsAutoOpen( ent ) then return end
+
+	local d = SWGRP.Doors.GetMasterData( ent )
+	if not d then return end
+	if not d.locked then return end
+
+	if not SWGRP.Config.DisableDoorAutoOpen:GetBool() then return end
+
 	return true
 end )
 
@@ -736,7 +851,9 @@ hook.Add( "PlayerUse", "SWGRP_DoorAccess", function( ply, ent )
 			end
 			return false
 		end
-		return
+
+		SWGRP.Doors.PlayerTryUse( ent, ply )
+		return false
 	end
 
 	-- Owned controls (buttons or prop_dynamic): a locked control only operates

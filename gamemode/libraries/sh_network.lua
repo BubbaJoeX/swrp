@@ -50,6 +50,19 @@ if SERVER then
 		"SWGRP_JobSpawnMenu",
 		"SWGRP_JobSpawnAction",
 		"SWGRP_JobSpawnSync",
+		"SWGRP_JailSpawnMenu",
+		"SWGRP_JailSpawnAction",
+		"SWGRP_JailSpawnSync",
+		"SWGRP_MapAdjustMenu",
+		"SWGRP_MapAdjustAction",
+		"SWGRP_MapAdjustSync",
+		"SWGRP_EntitySpawnMenu",
+		"SWGRP_EntitySpawnAction",
+		"SWGRP_OwnershipMenu",
+		"SWGRP_OwnershipAction",
+		"SWGRP_SecuritySync",
+		"SWGRP_CasinoOpenMenu",
+		"SWGRP_CasinoBet",
 	}
 
 	for _, name in ipairs( nets ) do

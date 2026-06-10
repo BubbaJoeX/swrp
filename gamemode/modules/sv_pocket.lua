@@ -637,6 +637,26 @@ function SWGRP.Pocket.Restore( ply )
 	syncPocket( ply )
 end
 
+-- Pocket weapons are not persisted across map/server restarts.
+function SWGRP.Pocket.ClearWeaponSlots( ply )
+	if not IsValid( ply ) then return end
+
+	local slots = SWGRP.Pocket.GetSlots( ply )
+	local cleared = false
+
+	for i = 1, SWGRP.Pocket.Max() do
+		local item = SWGRP.Pocket.NormalizeItem( slots[i] )
+		if item and item.kind == "weapon" then
+			slots[i] = false
+			cleared = true
+		end
+	end
+
+	if cleared then
+		syncPocket( ply )
+	end
+end
+
 function SWGRP.Pocket.RequestDrop( ply )
 	if not IsValid( ply ) then return end
 	syncPocket( ply )

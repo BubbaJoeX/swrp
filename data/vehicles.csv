@@ -2,3 +2,4 @@
 # class = prop_vehicle_jeep or prop_vehicle_airboat
 # script = path under scripts/vehicles/
 name,model,class,script,price,allowed,category
+Imp Speeder,models/imp_speeder/av211.mdl,prop_vehicle_jeep,scripts/vehicles/imp_speeder.txt,4500,*,Vehicles

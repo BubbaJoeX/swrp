@@ -81,29 +81,38 @@ function SWGRP.Doors.GetHammerTarget( ent )
 end
 
 --[[---------------------------------------------------------------------------
-    Door access groups (driven by job allegiances / custom door groups)
+    Door access groups (allegiance, individual jobs, custom team lists)
 
     A door group key is either:
       * "allegiance:<id>"  - any job whose allegiance matches (e.g. imperial)
+      * "job:<teamId>"     - a single profession / team
       * a custom name in SWGRP.DoorGroups / SWGRP.Config.DoorGroups (team list)
 ---------------------------------------------------------------------------]]
 
 function SWGRP.Doors.GetGroupList()
 	local seen, list = {}, {}
 
-	local function add( key, label, sort )
+	local function add( key, label, sort, kind )
 		if not key or key == "" or seen[key] then return end
 		seen[key] = true
-		list[#list + 1] = { key = key, label = label or key, sort = sort or 100 }
+		list[#list + 1] = { key = key, label = label or key, sort = sort or 100, kind = kind or "custom" }
 	end
 
 	for id, data in pairs( SWGRP.AllegianceData or {} ) do
-		add( "allegiance:" .. id, data.name, data.sortOrder or 50 )
+		add( "allegiance:" .. id, data.name, data.sortOrder or 50, "allegiance" )
 	end
 
-	for name in pairs( SWGRP.DoorGroups or {} ) do add( name, name, 200 ) end
+	for teamId, job in pairs( SWGRP.Jobs or {} ) do
+		local label = job.name or ( "Team " .. teamId )
+		if job.category and job.category ~= "" then
+			label = job.category .. " — " .. label
+		end
+		add( "job:" .. teamId, label, 120, "job" )
+	end
+
+	for name in pairs( SWGRP.DoorGroups or {} ) do add( name, name, 200, "custom" ) end
 	if SWGRP.Config and SWGRP.Config.DoorGroups then
-		for name in pairs( SWGRP.Config.DoorGroups ) do add( name, name, 210 ) end
+		for name in pairs( SWGRP.Config.DoorGroups ) do add( name, name, 210, "custom" ) end
 	end
 
 	table.sort( list, function( a, b )
@@ -123,6 +132,12 @@ function SWGRP.Doors.GetGroupLabel( key )
 		return d and d.name or alle
 	end
 
+	local teamId = tonumber( string.match( key, "^job:(%d+)$" ) )
+	if teamId then
+		local job = SWGRP.GetJob and SWGRP.GetJob( teamId )
+		return job and job.name or ( "Job " .. teamId )
+	end
+
 	return key
 end
 
@@ -136,6 +151,11 @@ function SWGRP.Doors.PlayerInGroup( ply, key )
 			return SWGRP.GetJobAllegiance( job ) == alle
 		end
 		return false
+	end
+
+	local teamId = tonumber( string.match( key, "^job:(%d+)$" ) )
+	if teamId then
+		return ply:Team() == teamId
 	end
 
 	local teams = ( SWGRP.DoorGroups and SWGRP.DoorGroups[key] )

@@ -150,7 +150,19 @@ C.AdminWeapons = {
 	"swgrp_admin_doortool",
 	"swgrp_admin_buttontool",
 	"swgrp_admin_jobspawntool",
+	"swgrp_admin_jailtool",
+	"swgrp_admin_mapadjuster",
+	"swgrp_entity_spawner",
+	"swgrp_admin_ownershipchanger",
 }
+
+-- Casino machines (cantina operators only; min/max bet per gamble)
+C.CasinoMinBet      = CreateConVar( "swgrp_casino_minbet", "10", FCVAR_ARCHIVE + FCVAR_REPLICATED )
+C.CasinoMaxBet      = CreateConVar( "swgrp_casino_maxbet", "500", FCVAR_ARCHIVE + FCVAR_REPLICATED )
+C.CasinoHouseEdge   = CreateConVar( "swgrp_casino_houseedge", "0.05", FCVAR_ARCHIVE + FCVAR_REPLICATED )
+
+-- Security cameras (max placed per player)
+C.SecurityCamMax      = CreateConVar( "swgrp_security_cammax", "3", FCVAR_ARCHIVE + FCVAR_REPLICATED )
 C.AdminsCopWeapons = false
 
 GM.Config = GM.Config or {}

@@ -39,3 +39,17 @@ function SWGRP.VehiclesMgr.Buy( ply, vehicleId )
 
 	SWGRP.Notify( ply, "Vehicle purchased: " .. veh.name )
 end
+
+hook.Add( "CanPlayerEnterVehicle", "SWGRP_VehicleLicense", function( ply, veh )
+	if not IsValid( ply ) or not IsValid( veh ) then return end
+	if ply:IsAdmin() then return end
+	if ply:SWGRP_HasVehicleLicense() then return end
+
+	local job = SWGRP.GetJob( ply:Team() )
+	if job and ( job.officer or job.stormtrooper or job.governor ) then return end
+
+	if SWGRP.Ownership and SWGRP.Ownership.IsOwner( ply, veh ) then return end
+
+	SWGRP.Notify( ply, "You need a vehicle license to operate this vehicle." )
+	return false
+end )

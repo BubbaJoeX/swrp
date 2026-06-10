@@ -69,6 +69,7 @@ if csLuaCount < 10 then
 end
 
 include( "shared.lua" )
+include( "modules/sv_resources.lua" )
 include( "libraries/sv_entity_loader.lua" )
 
 include( "libraries/mysqlite/mysqlite.lua" )
@@ -96,6 +97,12 @@ include( "modules/sv_demote.lua" )
 include( "modules/sv_afk.lua" )
 include( "modules/sv_spawn.lua" )
 include( "modules/sv_jobspawns.lua" )
+include( "modules/sv_jailspawns.lua" )
+include( "modules/sv_mapadjuster.lua" )
+include( "modules/sv_security.lua" )
+include( "modules/sv_entityspawner.lua" )
+include( "modules/sv_ownershiptool.lua" )
+include( "modules/sv_casino.lua" )
 include( "modules/sv_spawnmenu.lua" )
 include( "modules/sv_medic.lua" )
 include( "modules/sv_banking.lua" )
