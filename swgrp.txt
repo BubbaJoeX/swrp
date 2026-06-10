@@ -1,7 +1,7 @@
 "swgrp"
 {
 	"base"		"sandbox"
-	"title"		"Star Wars Galaxies RP"
+	"title"		"Galaxies RP"
 	"category"	"rp"
 	"menusystem"	"1"
 	"settings"
@@ -87,4 +87,9 @@
 			"default"	"1"
 		}
 	}
+}
+
+"loadscreen"
+{
+	"url"	"swgrp/loadscreen/index.html"
 }

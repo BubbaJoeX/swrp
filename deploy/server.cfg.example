@@ -1,0 +1,28 @@
+// Galaxies RP — dedicated server example config
+// Copy relevant lines into garrysmod/cfg/server.cfg
+
+hostname "Galaxies RP"
+sv_password ""
+rcon_password "change-me"
+
+// Gamemode
+gamemode "swgrp"
+sv_defaultgamemode "swgrp"
+
+// Loading screen (pick ONE method)
+//
+// Method A — local asset file (recommended for dedicated servers):
+//   1. Run deploy/install_loadscreen.ps1 from the swgrp gamemode folder
+//   2. Uncomment the line below
+sv_loadingurl "asset://garrysmod/html/swgrp/loadscreen.html"
+
+// Method B — hosted URL (works for all clients without local files):
+// sv_loadingurl "https://your-domain.com/galaxiesrp/loadscreen.html?mapname=%m&steamid=%s"
+
+// Players must have loading URLs enabled (default on)
+// cl_enable_loadingurl 1
+
+maxplayers 32
+sv_lan 0
+
+// Workshop / FastDL content goes here
