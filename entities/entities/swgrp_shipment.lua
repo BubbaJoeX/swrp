@@ -168,8 +168,8 @@ if SERVER then
 
 	function ENT:GetEjectPos()
 		local mins, maxs = self:OBBMins(), self:OBBMaxs()
-		local _, rmaxs = self:GetRenderBounds()
-		local topZ = math.max( maxs.z, rmaxs.z )
+		local _, mmaxs = self:GetModelBounds()
+		local topZ = math.max( maxs.z, mmaxs.z )
 		return self:LocalToWorld( Vector(
 			( mins.x + maxs.x ) * 0.5,
 			( mins.y + maxs.y ) * 0.5,
@@ -216,7 +216,12 @@ if SERVER then
 	end
 end
 
--- World GUI + preview drawn from gamemode/modules/cl_shipments.lua
-function ENT:Draw()
-	self:DrawModel()
+if CLIENT then
+	function ENT:Draw()
+		self:DrawModel()
+
+		if SWGRP and SWGRP.Shipment and SWGRP.Shipment.DrawCrateOverlay then
+			SWGRP.Shipment.DrawCrateOverlay( self )
+		end
+	end
 end

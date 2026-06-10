@@ -211,15 +211,16 @@ function SWGRP.Economy.SpawnWeaponPickupAt( pos, ang, class, worldModel, ply, ve
 	pickup:Spawn()
 	pickup:Activate()
 
-	if not IsValid( pickup:GetPhysicsObject() ) then
-		pickup:Remove()
-		return nil
+	local phys = pickup:GetPhysicsObject()
+	if not IsValid( phys ) then
+		pickup:SetMoveType( MOVETYPE_NONE )
+		pickup:SetSolid( SOLID_BBOX )
+	else
+		if velocity then
+			phys:SetVelocity( velocity )
+		end
+		phys:Wake()
 	end
-
-	if velocity then
-		pickup:GetPhysicsObject():SetVelocity( velocity )
-	end
-	pickup:GetPhysicsObject():Wake()
 
 	if IsValid( ply ) and SWGRP.Ownership and SWGRP.Ownership.SetOwner then
 		SWGRP.Ownership.SetOwner( pickup, ply )

@@ -565,7 +565,7 @@ local function giveWeapon( ply, item )
 	local class = item.class
 	local state = item.state or {}
 
-	ply:Give( class )
+	if not SWGRP.GrantWeapon( ply, class ) then return false end
 	local wep = ply:GetWeapon( class )
 	if not IsValid( wep ) then return false end
 

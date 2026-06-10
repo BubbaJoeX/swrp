@@ -20,6 +20,33 @@ local function SWGRP_GiveAmmoForWeapons( ply )
 	end
 end
 
+function SWGRP.GrantWeapon( ply, class )
+	if not IsValid( ply ) or not class or class == "" or not weapons.Get( class ) then return false end
+
+	ply.SWGRP_GrantedWeapons = ply.SWGRP_GrantedWeapons or {}
+	ply.SWGRP_GrantedWeapons[class] = true
+
+	ply.SWGRP_SkipSpawnAllowlistGive = class
+	ply:Give( class )
+	ply.SWGRP_SkipSpawnAllowlistGive = nil
+
+	if not ply:HasWeapon( class ) then return false end
+
+	local wep = ply:GetWeapon( class )
+	if IsValid( wep ) then
+		local primary = wep:GetPrimaryAmmoType()
+		local secondary = wep:GetSecondaryAmmoType()
+		if primary >= 0 and ply:GetAmmoCount( primary ) <= 0 then
+			ply:GiveAmmo( 90, primary, true )
+		end
+		if secondary >= 0 and ply:GetAmmoCount( secondary ) <= 0 then
+			ply:GiveAmmo( 90, secondary, true )
+		end
+	end
+
+	return true
+end
+
 function SWGRP.BuildAllowedLoadout( ply )
 	local allowed = {}
 	local cfg = GAMEMODE.Config or SWGRP.Config or {}
@@ -41,6 +68,12 @@ function SWGRP.BuildAllowedLoadout( ply )
 
 	for _, wep in ipairs( cfg.DefaultWeapons or {} ) do
 		add( wep )
+	end
+
+	if ply.SWGRP_GrantedWeapons then
+		for class in pairs( ply.SWGRP_GrantedWeapons ) do
+			add( class )
+		end
 	end
 
 	if ply:IsAdmin() then
@@ -70,12 +103,26 @@ function SWGRP.EnforceLoadout( ply )
 		end
 	end
 
+	ply.SWGRP_SkipSpawnAllowlistGive = "swgrp_keys"
 	ply:Give( "swgrp_keys" )
+	ply.SWGRP_SkipSpawnAllowlistGive = nil
 
 	if job and job.weapons then
 		for _, wep in ipairs( job.weapons ) do
 			if not ply:HasWeapon( wep ) then
+				ply.SWGRP_SkipSpawnAllowlistGive = wep
 				ply:Give( wep )
+				ply.SWGRP_SkipSpawnAllowlistGive = nil
+			end
+		end
+	end
+
+	if ply.SWGRP_GrantedWeapons then
+		for class in pairs( ply.SWGRP_GrantedWeapons ) do
+			if not ply:HasWeapon( class ) then
+				ply.SWGRP_SkipSpawnAllowlistGive = class
+				ply:Give( class )
+				ply.SWGRP_SkipSpawnAllowlistGive = nil
 			end
 		end
 	end
@@ -88,7 +135,9 @@ function SWGRP.EnforceLoadout( ply )
 
 	for _, wep in ipairs( cfg.DefaultWeapons or {} ) do
 		if not ply:HasWeapon( wep ) then
+			ply.SWGRP_SkipSpawnAllowlistGive = wep
 			ply:Give( wep )
+			ply.SWGRP_SkipSpawnAllowlistGive = nil
 		end
 	end
 
@@ -125,14 +174,25 @@ function SWGRP.EnforceLoadout( ply )
 				for _, wep in ipairs( cfg.AdminWeapons or {} ) do
 					allowed[wep] = true
 					if not ply:HasWeapon( wep ) then
+						ply.SWGRP_SkipSpawnAllowlistGive = wep
 						ply:Give( wep )
+						ply.SWGRP_SkipSpawnAllowlistGive = nil
 					end
 				end
 			end
 			finalizeLoadout()
 		end )
 	else
-		giveAdminWeapons( ply:IsAdmin() )
+		if ply:IsAdmin() then
+			for _, wep in ipairs( cfg.AdminWeapons or {} ) do
+				allowed[wep] = true
+				if not ply:HasWeapon( wep ) then
+					ply.SWGRP_SkipSpawnAllowlistGive = wep
+					ply:Give( wep )
+					ply.SWGRP_SkipSpawnAllowlistGive = nil
+				end
+			end
+		end
 		finalizeLoadout()
 	end
 end
@@ -244,7 +304,9 @@ timer.Create( "SWGRP_EnsureKeys", 5, 0, function()
 		if IsValid( ply ) and ply:Alive()
 			and not ply:SWGRP_IsArrested() and not ply:SWGRP_IsRestrained()
 			and not ply:HasWeapon( "swgrp_keys" ) then
+			ply.SWGRP_SkipSpawnAllowlistGive = "swgrp_keys"
 			ply:Give( "swgrp_keys" )
+			ply.SWGRP_SkipSpawnAllowlistGive = nil
 		end
 	end
 end )

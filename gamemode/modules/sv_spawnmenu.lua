@@ -5,6 +5,8 @@
 local Allow = SWGRP.SpawnAllowlist
 
 local function BlockSpawn( ply, category, id )
+	if category == "weapons" and Allow.CanBypassWeapons( ply ) then return end
+	if category ~= "weapons" and Allow.CanBypass( ply ) then return end
 	if Allow.IsAllowed( ply, category, id ) then return end
 	SWGRP.Notify( ply, SWGRP.Lang.spawn_not_allowed or "You cannot spawn that from the Q menu." )
 	return false
@@ -41,6 +43,8 @@ hook.Add( "PlayerSpawnSWEP", "SWGRP_SpawnAllowlist", function( ply, wname )
 end )
 
 hook.Add( "PlayerGiveSWEP", "SWGRP_SpawnAllowlist", function( ply, wname )
+	if ply.SWGRP_SkipSpawnAllowlistGive == wname then return true end
+	if string.StartWith( wname or "", "swgrp_" ) then return true end
 	return BlockSpawn( ply, "weapons", wname )
 end )
 

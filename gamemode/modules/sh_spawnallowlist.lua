@@ -40,8 +40,14 @@ end
 
 function Allow.CanBypass( ply )
 	if not IsValid( ply ) then return false end
+	if ply:IsSuperAdmin() then return true end
 	if SWGRP.FAdmin and SWGRP.FAdmin.CanSpawn( ply ) then return true end
 	return ply:IsAdmin()
+end
+
+-- Q-menu weapons tab: superadmins only; regular players buy from shipments.
+function Allow.CanBypassWeapons( ply )
+	return IsValid( ply ) and ply:IsSuperAdmin()
 end
 
 function Allow.IsAllowed( ply, category, id )
