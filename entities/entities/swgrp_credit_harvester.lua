@@ -8,8 +8,9 @@ ENT.Spawnable = false
 
 -- Built-in model; entities.csv overrides this via BuyEntity. Kept in sync with
 -- the galactic credit prop so toolgun / direct spawns look right too.
-ENT.DefaultModel  = "models/props/starwars/weapons/hoth_bomb.mdl"
-ENT.FallbackModel = "models/props/starwars/weapons/hoth_bomb.mdl"
+ENT.DefaultModel  = "models/starwars/syphadias/props/sw_tor/bioware_ea/items/harvesting/slicing/slicing_safeboxes_dial.mdl"
+ENT.FallbackModel = "models/starwars/syphadias/props/sw_tor/bioware_ea/items/harvesting/slicing/slicing_safeboxes_dial.mdl"
+ENT.ModelScale    = 0.55
 
 -- Money-printer tuning. The harvester slowly "prints" credits; once it has
 -- enough banked it ejects a physical money pile beside itself that anyone can
@@ -51,6 +52,7 @@ if SERVER then
 		self:SetStoredCredits( 0 )
 		self:SetHeat( 0 )
 		self:SetOverheated( false )
+		self:SetModelScale( self.ModelScale or 1 )
 
 		local phys = self:GetPhysicsObject()
 		if IsValid( phys ) then phys:Wake() end
@@ -169,7 +171,7 @@ if CLIENT then
 	function ENT:Draw()
 		self:DrawModel()
 
-		local pos = self:GetPos() + Vector( 0, 0, 24 )
+		local pos = self:GetPos() + Vector( 0, 0, self:OBBMaxs().z + 4 )
 		local ang = LocalPlayer():EyeAngles()
 		ang:RotateAroundAxis( ang:Forward(), 90 )
 		ang:RotateAroundAxis( ang:Right(), 90 )

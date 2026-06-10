@@ -262,10 +262,10 @@ end
 SWGRP.Pocket.EntityCapture = {
 	swgrp_shipment = function( ent )
 		return {
-			model     = ent:GetModel(),
-			remaining = ent:GetRemaining(),
-			weapon    = ent:GetWeaponClass(),
-			name      = ent:GetShipmentName(),
+			remaining    = ent:GetRemaining(),
+			weapon       = ent:GetWeaponClass(),
+			name         = ent:GetShipmentName(),
+			previewModel = ent.GetPreviewModel and ent:GetPreviewModel() or "",
 		}
 	end,
 
@@ -454,6 +454,10 @@ local function spawnEntity( ply, item )
 		return SWGRP.VehiclesMgr.SpawnFromPocketItem( ply, item )
 	end
 
+	if class == "swgrp_shipment" and SWGRP.Economy and SWGRP.Economy.SpawnShipmentCrate then
+		return SWGRP.Economy.SpawnShipmentCrate( ply, nil, false, item.state or {} )
+	end
+
 	local state = item.state or {}
 	local pos, ang = SWGRP.Economy.GroundSpawn( ply )
 
@@ -490,8 +494,10 @@ local function spawnEntity( ply, item )
 		ent.SWGRP_PocketableVehicle = true
 	end
 
-	ent:SetPos( pos )
-	ent:SetAngles( ang )
+	if SWGRP.Economy and SWGRP.Economy.AlignBottomToGround then
+		SWGRP.Economy.AlignBottomToGround( ent, pos, ang )
+	end
+
 	local phys = ent:GetPhysicsObject()
 	if IsValid( phys ) then phys:Wake() end
 

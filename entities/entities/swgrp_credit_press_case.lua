@@ -6,10 +6,21 @@ ENT.PrintName = "Credit Press Case"
 ENT.Category = "SWGRP"
 ENT.Spawnable = false
 
-ENT.DefaultModel = "models/starwars/syphadias/props/sw_tor/bioware_ea/props/city/city_wall_tech_02.mdl"
+ENT.DefaultModel = "models/starwars/syphadias/props/sw_tor/bioware_ea/props/city/city_market_stand_01.mdl"
+ENT.LabelClearance = 16
+
 ENT.MountOffsets = {
-	{ pos = Vector( 6.7368, 16.25, 22.8301 ), ang = Angle( 0, 0, 0 ) },
-	{ pos = Vector( 7.3599, -4.9868, 22.8301 ), ang = Angle( 0, 0, 0 ) },
+	{ pos = Vector( 7.2002, -20.9653, 39.3027 ), ang = Angle( 0, 0, 0 ) },
+	{ pos = Vector( 7.6309, -7.1509, 39.3027 ), ang = Angle( 0, 0, 0 ) },
+	{ pos = Vector( 7.5327, 7.1479, 39.3027 ), ang = Angle( 0, 0, 0 ) },
+	{ pos = Vector( 7.6367, 20.813, 39.3027 ), ang = Angle( 0, 0, 0 ) },
+	{ pos = Vector( 7.3345, -20.9629, 61.1133 ), ang = Angle( 0, 0, 0 ) },
+	{ pos = Vector( 7.4722, -7.1562, 61.1133 ), ang = Angle( 0, 0, 0 ) },
+	{ pos = Vector( 7.5186, 6.8877, 61.1133 ), ang = Angle( 0, 0, 0 ) },
+	{ pos = Vector( 7.7578, 20.9282, 61.1133 ), ang = Angle( 0, 0, 0 ) },
+	{ pos = Vector( 13.6118, -20.269, 0.9434 ), ang = Angle( 0, 0, 0 ) },
+	{ pos = Vector( 13.7471, 0.063, 0.9434 ), ang = Angle( 0, 0, 0 ) },
+	{ pos = Vector( 12.54, 22.3271, 0.9434 ), ang = Angle( 0, 0, 0 ) },
 }
 
 function ENT:SetupDataTables()
@@ -242,6 +253,21 @@ if SERVER then
 end
 
 if CLIENT then
+	function ENT:GetLabelPos()
+		local mins, maxs = self:OBBMins(), self:OBBMaxs()
+		local centerX = ( mins.x + maxs.x ) * 0.5
+		local centerY = ( mins.y + maxs.y ) * 0.5
+
+		local topRowZ = 0
+		for _, mount in ipairs( self.MountOffsets or {} ) do
+			if mount.pos.z > topRowZ then
+				topRowZ = mount.pos.z
+			end
+		end
+
+		return self:LocalToWorld( Vector( centerX, centerY, topRowZ + self.LabelClearance ) )
+	end
+
 	function ENT:Draw()
 		self:DrawModel()
 
@@ -256,7 +282,7 @@ if CLIENT then
 		end
 
 		if SWGRP.UI and SWGRP.UI.DrawWorldLabel then
-			SWGRP.UI.DrawWorldLabel( self, "CREDIT PRESS CASE", status, SWGRP.UI.Colors.accent )
+			SWGRP.UI.DrawWorldLabel( self, "CREDIT PRESS CASE", status, SWGRP.UI.Colors.accent, self:GetLabelPos() )
 		end
 	end
 end

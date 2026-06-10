@@ -2,12 +2,13 @@ AddCSLuaFile()
 
 ENT.Type = "anim"
 ENT.Base = "base_anim"
-ENT.PrintName = "Casino Machine (Classic)"
+ENT.PrintName = "Gambling Gonk"
 ENT.Category = "SWGRP"
 ENT.Spawnable = false
 
-ENT.DefaultModel = "models/props/starwars/tech/imp_datapad.mdl"
-ENT.Theme = "classic"
+ENT.DefaultModel = "models/kingpommes/emperors_tower/ph_props/gnk_droid/gnk_droid.mdl"
+ENT.FallbackModel = "models/kingpommes/emperors_tower/ph_props/gnk_droid/gnk_droid.mdl"
+ENT.Theme = "Spend your credits on this!"
 ENT.SpinSound = "buttons/button14.wav"
 ENT.WinSound = "ambient/levels/labs/coinslot1.wav"
 
@@ -96,7 +97,7 @@ end
 if CLIENT then
 	function ENT:Draw()
 		self:DrawModel()
-		local label = self:GetSpinning() and "SPINNING..." or "CASINO - Press E"
+		local label = self:GetSpinning() and "SPINNING..." or "Gambling Gonk - Press [E] to gamble"
 		if SWGRP.UI and SWGRP.UI.DrawWorldLabel then
 			SWGRP.UI.DrawWorldLabel( self, label, self.Theme or "classic", SWGRP.UI.Colors.accent )
 		end

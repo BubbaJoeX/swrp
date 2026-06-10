@@ -142,7 +142,7 @@ if CLIENT then
 		local pos = self:LocalToWorld( self:OBBCenter() )
 		local ang = self:GetAngles()
 		ang:RotateAroundAxis( ang:Up(), 90 )
-		ang:RotateAroundAxis( ang:Forward(), -90 )
+		ang:RotateAroundAxis( ang:Forward(), 90 )
 
 		local lines = WrapSignText( text, self.TextCharsPerLine )
 		local lineHeight = self.TextLineHeight

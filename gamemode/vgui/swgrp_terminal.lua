@@ -51,13 +51,13 @@ end
 -- an entity's clientside Draw. Yaws to face the viewer while staying upright,
 -- matching the 3D2D convention used by other SWGRP world entities, and fades
 -- out with distance so it isn't visible across the whole map.
-function UI.DrawWorldLabel( ent, title, subtitle, accent )
+function UI.DrawWorldLabel( ent, title, subtitle, accent, labelPos )
 	if not IsValid( ent ) then return end
 
 	local ply = LocalPlayer()
 	if not IsValid( ply ) then return end
 
-	local pos = ent:GetPos() + Vector( 0, 0, ent:OBBMaxs().z + 16 )
+	local pos = labelPos or ( ent:GetPos() + Vector( 0, 0, ent:OBBMaxs().z + 16 ) )
 
 	local dist = ply:EyePos():Distance( pos )
 	if dist > 800 then return end

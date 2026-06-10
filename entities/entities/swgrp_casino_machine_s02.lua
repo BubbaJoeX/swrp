@@ -6,8 +6,8 @@ ENT.PrintName = "Casino Machine (Neon)"
 ENT.Category = "SWGRP"
 ENT.Spawnable = false
 
-ENT.DefaultModel = "models/props/starwars/tech/imp_datapad.mdl"
-ENT.Theme = "neon"
+ENT.DefaultModel = "models/kingpommes/emperors_tower/ph_props/rx_unit/rx_unit.mdl"
+ENT.Theme = "Beep Boop!"
 ENT.SpinSound = "buttons/button17.wav"
 ENT.WinSound = "ambient/levels/labs/electric_explosion1.wav"
 

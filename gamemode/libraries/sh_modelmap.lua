@@ -26,6 +26,7 @@ SWGRP.ModelMap.Weapons = {
 	weapon_rpg        = "models/weapons/w_rocket_launcher.mdl",
 	weapon_crowbar    = "models/weapons/w_crowbar.mdl",
 	weapon_stunstick  = "models/weapons/w_stunbaton.mdl",
+	weapon_752_e11    = "models/weapons/w_e11.mdl",
 }
 
 SWGRP.ModelMap.Entities = {
@@ -38,6 +39,7 @@ SWGRP.ModelMap.Entities = {
 	swgrp_mission_terminal  = "models/props_c17/consolebox03a.mdl",
 	swgrp_tipjar            = "models/starwars/syphadias/props/sw_tor/bioware_ea/items/harvesting/scavenge/scavenge_barrel.mdl",
 	swgrp_holo_sign         = "models/squiddy/hologram_01.mdl",
+	swgrp_shipment          = "models/Items/item_item_crate.mdl",
 }
 
 function SWGRP.ModelMap.Resolve( modelPath, fallback )

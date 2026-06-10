@@ -46,7 +46,7 @@ function ES.BuildCatalog()
 			kind = "shipment",
 			id = id,
 			name = ship.name or ( "Shipment " .. id ),
-			model = ship.model,
+			model = SWGRP.GetShipmentPreviewModel and SWGRP.GetShipmentPreviewModel( ship ) or ship.model,
 		} )
 	end
 
@@ -90,17 +90,11 @@ function ES.SpawnAt( ply, kind, id )
 
 	if kind == "entity" then
 		local class = tostring( id )
-		ent = ents.Create( class )
+		ent = SWGRP.Economy.SpawnStructure( ply, class, pos, ang )
 		if not IsValid( ent ) then
 			SWGRP.Notify( ply, "Failed to spawn entity: " .. class )
 			return
 		end
-		local data = SWGRP.Entities[class]
-		if data and data.model then ent:SetModel( data.model ) end
-		ent:SetPos( pos )
-		ent:SetAngles( ang )
-		ent:Spawn()
-		ent:Activate()
 	elseif kind == "food" then
 		local food = SWGRP.Foods[tonumber( id )]
 		if not food then return end
@@ -112,6 +106,7 @@ function ES.SpawnAt( ply, kind, id )
 		ent:Spawn()
 		ent.SWGRP_FoodId = tonumber( id )
 		ent.SWGRP_FoodName = food.name
+		SWGRP.Economy.AlignBottomToGround( ent, pos, ang )
 	elseif kind == "spice" then
 		ent = ents.Create( "swgrp_spice" )
 		if not IsValid( ent ) then return end
@@ -119,15 +114,15 @@ function ES.SpawnAt( ply, kind, id )
 		ent:SetAngles( ang )
 		ent:Spawn()
 		ent:SetSpice( tonumber( id ) )
+		SWGRP.Economy.AlignBottomToGround( ent, pos, ang )
 	elseif kind == "shipment" then
 		local ship = SWGRP.Shipments[tonumber( id )]
 		if not ship then return end
-		ent = ents.Create( "swgrp_shipment" )
-		if not IsValid( ent ) then return end
-		ent:SetPos( pos )
-		ent:SetAngles( ang )
-		ent:Spawn()
-		ent:SetShipment( tonumber( id ) )
+		ent = SWGRP.Economy.SpawnShipmentCrate( ply, ship, false )
+		if not IsValid( ent ) then
+			SWGRP.Notify( ply, "Failed to spawn shipment crate." )
+			return
+		end
 	elseif kind == "vehicle" then
 		local veh = SWGRP.Vehicles[tonumber( id )]
 		if not veh then return end

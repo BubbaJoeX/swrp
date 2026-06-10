@@ -6,6 +6,7 @@ SWGRP = SWGRP or {}
 SWGRP.Economy = SWGRP.Economy or {}
 
 SWGRP.Economy.Treasury = SWGRP.Economy.Treasury or 0
+SWGRP.Economy.GroundClearance = 2
 
 function SWGRP.Economy.Payday()
 	local taxRate = SWGRP.Config.TaxRate:GetFloat()
@@ -84,13 +85,51 @@ function SWGRP.Economy.GroundSpawn( ply, dist )
 	local startPos = ply:GetPos() + Vector( 0, 0, 16 ) + forward * dist
 	local tr = util.TraceLine( {
 		start  = startPos,
-		endpos = startPos - Vector( 0, 0, 200 ),
+		endpos = startPos - Vector( 0, 0, 512 ),
 		filter = ply,
-		mask   = MASK_SOLID_BRUSHONLY,
+		mask   = MASK_SOLID,
 	} )
 
-	local pos = tr.Hit and ( tr.HitPos + Vector( 0, 0, 4 ) ) or ( ply:GetPos() + forward * dist + Vector( 0, 0, 8 ) )
+	local pos = tr.Hit and tr.HitPos or ( ply:GetPos() + forward * dist + Vector( 0, 0, 8 ) )
 	return pos, Angle( 0, fwd.y, 0 )
+end
+
+-- Lowest world-space Z of the entity's oriented bounding box.
+function SWGRP.Economy.GetOBBLowestZ( ent )
+	if not IsValid( ent ) then return 0 end
+
+	local mins, maxs = ent:OBBMins(), ent:OBBMaxs()
+	local lowest = ent:LocalToWorld( mins ).z
+
+	for ix = 0, 1 do
+		for iy = 0, 1 do
+			for iz = 0, 1 do
+				local corner = Vector(
+					ix == 0 and mins.x or maxs.x,
+					iy == 0 and mins.y or maxs.y,
+					iz == 0 and mins.z or maxs.z
+				)
+				local wz = ent:LocalToWorld( corner ).z
+				if wz < lowest then lowest = wz end
+			end
+		end
+	end
+
+	return lowest
+end
+
+-- Place an entity so the bottom of its extent rests on surfacePos (trace hit).
+function SWGRP.Economy.AlignBottomToGround( ent, surfacePos, ang, clearance )
+	if not IsValid( ent ) or not surfacePos then return end
+
+	clearance = clearance or SWGRP.Economy.GroundClearance or 2
+	ang = ang or ent:GetAngles()
+
+	ent:SetAngles( ang )
+	ent:SetPos( Vector( surfacePos.x, surfacePos.y, surfacePos.z + 256 ) )
+
+	local lowestZ = SWGRP.Economy.GetOBBLowestZ( ent )
+	ent:SetPos( ent:GetPos() + Vector( 0, 0, surfacePos.z - lowestZ + clearance ) )
 end
 
 function SWGRP.Economy.BuyShipment( ply, shipmentId, separate )
@@ -134,47 +173,125 @@ function SWGRP.Economy.BuyShipment( ply, shipmentId, separate )
 		return
 	end
 
-	local pos, ang = SWGRP.Economy.GroundSpawn( ply )
-
-	-- A single-item purchase drops the weapon as a pickup on the ground in front
-	-- of the buyer; only full crates spawn the shipment crate entity.
 	if separate then
-		local wep = ents.Create( class )
-		if not IsValid( wep ) then
+		local pos, ang = SWGRP.Economy.GroundSpawn( ply )
+		local pickup = SWGRP.Economy.SpawnWeaponPickupAt( pos, ang, class, ship.previewModel, ply )
+		if not IsValid( pickup ) then
 			ply:SWGRP_AddCredits( price )
 			SWGRP.Notify( ply, SWGRP.Lang.shipment_spawn_fail )
 			return
 		end
-		wep:SetPos( pos )
-		wep:SetAngles( ang )
-		wep:Spawn()
-		wep:Activate()
-		if SWGRP.Ownership and SWGRP.Ownership.SetOwner then
-			SWGRP.Ownership.SetOwner( wep, ply )
-		end
-		SWGRP.Notify( ply, string.format( "Purchased %s for %s. It dropped in front of you.", ship.name, SWGRP.FormatCredits( price ) ) )
+		SWGRP.Economy.AlignBottomToGround( pickup, pos, ang )
+		SWGRP.Notify( ply, string.format( "Purchased %s for %s. Press E on the weapon to equip.", ship.name, SWGRP.FormatCredits( price ) ) )
 		SWGRP.Hooks.Call( "SWGRPEntityPurchased", ply, ship.name .. " (single)", price )
 		return
 	end
 
-	local ent = ents.Create( "swgrp_shipment" )
+	local ent = SWGRP.Economy.SpawnShipmentCrate( ply, ship, false )
 	if not IsValid( ent ) then
 		ply:SWGRP_AddCredits( price )
 		SWGRP.Notify( ply, SWGRP.Lang.shipment_spawn_fail )
 		return
 	end
-	ent:SetShipmentData( ship, separate )
-	ent:Spawn()
-	ent:Activate()
-	-- Position after Spawn so the (now guaranteed) physics object is moved with
-	-- the entity rather than leaving it parked at the world origin or in the floor.
-	ent:SetPos( pos )
-	ent:SetAngles( ang )
-	if SWGRP.Ownership and SWGRP.Ownership.SetOwner then
-		SWGRP.Ownership.SetOwner( ent, ply )
-	end
+
 	SWGRP.Notify( ply, string.format( "Purchased %s crate (%d items) for %s.", ship.name, ship.amount or 0, SWGRP.FormatCredits( price ) ) )
 	SWGRP.Hooks.Call( "SWGRPEntityPurchased", ply, ship.name .. " crate", price )
+end
+
+-- Spawn a physical weapon pickup; press E on it to equip.
+function SWGRP.Economy.SpawnWeaponPickupAt( pos, ang, class, worldModel, ply, velocity )
+	if not class or class == "" or not weapons.Get( class ) then return nil end
+
+	local pickup = ents.Create( "swgrp_weapon_pickup" )
+	if not IsValid( pickup ) then return nil end
+
+	pickup:SetWeaponData( class, worldModel )
+	pickup:SetPos( pos )
+	pickup:SetAngles( ang or Angle( 0, 0, 0 ) )
+	pickup:Spawn()
+	pickup:Activate()
+
+	if not IsValid( pickup:GetPhysicsObject() ) then
+		pickup:Remove()
+		return nil
+	end
+
+	if velocity then
+		pickup:GetPhysicsObject():SetVelocity( velocity )
+	end
+	pickup:GetPhysicsObject():Wake()
+
+	if IsValid( ply ) and SWGRP.Ownership and SWGRP.Ownership.SetOwner then
+		SWGRP.Ownership.SetOwner( pickup, ply )
+	end
+
+	return pickup
+end
+
+function SWGRP.Economy.SpawnWeaponPickup( ply, class )
+	if not IsValid( ply ) then return false end
+
+	local pos, ang = SWGRP.Economy.GroundSpawn( ply )
+	local pickup = SWGRP.Economy.SpawnWeaponPickupAt( pos, ang, class, nil, ply )
+	if not IsValid( pickup ) then return false end
+
+	SWGRP.Economy.AlignBottomToGround( pickup, pos, ang )
+	return true
+end
+
+function SWGRP.Economy.EjectWeaponFromCrate( crate, class, ply )
+	if not IsValid( crate ) or not class or class == "" or not weapons.Get( class ) then return nil end
+
+	local pos = crate.GetEjectPos and crate:GetEjectPos() or ( crate:GetPos() + Vector( 0, 0, 24 ) )
+	local ang = crate:GetAngles()
+	local worldModel = crate.GetPreviewModel and crate:GetPreviewModel() or ""
+
+	local velocity
+	if IsValid( ply ) then
+		local toPly = ply:GetPos() + Vector( 0, 0, 36 ) - pos
+		if toPly:LengthSqr() < 1 then
+			toPly = crate:GetForward()
+		end
+		toPly.z = math.max( toPly.z, 20 )
+		toPly:Normalize()
+		velocity = toPly * 260 + Vector( 0, 0, 140 )
+	end
+
+	return SWGRP.Economy.SpawnWeaponPickupAt( pos, ang, class, worldModel, ply, velocity )
+end
+
+-- Spawn the swgrp_shipment crate entity with valid crate physics and contents.
+function SWGRP.Economy.SpawnShipmentCrate( ply, ship, separate, state )
+	local pos, ang = SWGRP.Economy.GroundSpawn( ply )
+	local ent = ents.Create( "swgrp_shipment" )
+	if not IsValid( ent ) then return nil end
+
+	ent:SetPos( pos )
+	ent:SetAngles( ang )
+
+	if state then
+		ent:SetShipmentState( state )
+	elseif ship then
+		ent:SetShipmentData( ship, separate )
+	end
+
+	ent:Spawn()
+	ent:Activate()
+
+	if not IsValid( ent:GetPhysicsObject() ) then
+		ent:Remove()
+		return nil
+	end
+
+	SWGRP.Economy.AlignBottomToGround( ent, pos, ang )
+	local phys = ent:GetPhysicsObject()
+	if IsValid( phys ) then phys:Wake() end
+
+	if IsValid( ply ) and SWGRP.Ownership and SWGRP.Ownership.SetOwner then
+		SWGRP.Ownership.SetOwner( ent, ply )
+	end
+
+	return ent
 end
 
 function SWGRP.Economy.BuyFood( ply, foodId )
@@ -273,10 +390,7 @@ function SWGRP.Economy.CraftSpice( ply, spiceId )
 	ent:Spawn()
 	ent:Activate()
 	ent:SetSpice( spiceId )
-	-- Re-place after the model/physics swap in SetSpice so the pickup lands in
-	-- front of the crafter rather than wherever the new physics object settled.
-	ent:SetPos( pos )
-	ent:SetAngles( ang )
+	SWGRP.Economy.AlignBottomToGround( ent, pos, ang )
 
 	if SWGRP.Ownership and SWGRP.Ownership.SetOwner then
 		SWGRP.Ownership.SetOwner( ent, ply )
@@ -318,11 +432,11 @@ function SWGRP.Economy.SpawnStructure( ply, class, pos, ang )
 		end
 		ent:SetSolid( SOLID_VPHYSICS )
 		ent:SetMoveType( MOVETYPE_VPHYSICS )
-		ent:SetPos( pos )
-		ent:SetAngles( ang )
 		local phys = ent:GetPhysicsObject()
 		if IsValid( phys ) then phys:Wake() end
 	end
+
+	SWGRP.Economy.AlignBottomToGround( ent, pos, ang )
 
 	if IsValid( ply ) and SWGRP.Ownership and SWGRP.Ownership.SetOwner then
 		SWGRP.Ownership.SetOwner( ent, ply )
