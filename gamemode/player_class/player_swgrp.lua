@@ -2,7 +2,10 @@
     SWGRP Player Class - no sandbox weapon loadout
 ---------------------------------------------------------------------------]]
 
-AddCSLuaFile()
+if SERVER then
+	AddCSLuaFile()
+end
+
 DEFINE_BASECLASS( "player_default" )
 
 local PLAYER = {}

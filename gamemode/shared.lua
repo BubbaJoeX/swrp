@@ -31,6 +31,7 @@ include( "libraries/sh_hooks.lua" )
 include( "libraries/sh_fadmin.lua" )
 include( "libraries/sh_admin.lua" )
 include( "language/sh_english.lua" )
+include( "player_class/player_swgrp.lua" )
 
 -- Content registration (shared)
 include( "modules/sh_categories.lua" )

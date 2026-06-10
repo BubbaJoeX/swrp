@@ -26,6 +26,7 @@ AddCSLuaFiles( "libraries" )
 AddCSLuaFiles( "modules" )
 AddCSLuaFiles( "language" )
 AddCSLuaFiles( "vgui" )
+AddCSLuaFiles( "player_class" )
 
 include( "shared.lua" )
 include( "libraries/sv_entity_loader.lua" )

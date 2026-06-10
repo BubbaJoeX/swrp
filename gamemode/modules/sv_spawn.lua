@@ -83,8 +83,20 @@ function SWGRP.GiveJobLoadout( ply )
 end
 
 function GM:PlayerLoadout( ply )
-	self.Sandbox.PlayerLoadout( self, ply )
+	player_manager.RunClass( ply, "Loadout" )
 	SWGRP.GiveJobLoadout( ply )
+end
+
+function GM:PlayerSpawn( ply )
+	player_manager.SetPlayerClass( ply, "player_swgrp" )
+
+	local job = SWGRP.GetJob( ply:Team() )
+	if job and job.PlayerSpawn then
+		job.PlayerSpawn( ply )
+	end
+
+	ply:SetHealth( 100 )
+	ply:SetArmor( 0 )
 end
 
 hook.Add( "PlayerInitialSpawn", "SWGRP_LoadPlayer", function( ply )
@@ -116,18 +128,6 @@ timer.Create( "SWGRP_EnsureKeys", 5, 0, function()
 			ply:Give( "swgrp_keys" )
 		end
 	end
-end )
-
-hook.Add( "PlayerSpawn", "SWGRP_PlayerSpawn", function( ply )
-	player_manager.SetPlayerClass( ply, "player_swgrp" )
-
-	local job = SWGRP.GetJob( ply:Team() )
-	if job and job.PlayerSpawn then
-		job.PlayerSpawn( ply )
-	end
-
-	ply:SetHealth( 100 )
-	ply:SetArmor( 0 )
 end )
 
 hook.Add( "PlayerSpawnProp", "SWGRP_PropLimit", function( ply )
