@@ -13,42 +13,50 @@ GM.Email    = "N/A"
 GM.Website  = "N/A"
 GM.IsSWGRPDerived = true
 
+-- Dedicated clients only receive Lua via AddCSLuaFile under swgrp/gamemode/...
+-- (same path style as bundled FAdmin). Short gamemode-relative includes fail on join.
+local GM_ROOT = GM.FolderName .. "/gamemode/"
+local function Inc( path )
+	include( GM_ROOT .. path )
+end
+
 -- Core libraries
-include( "config/sh_config.lua" )
-include( "libraries/sh_cami.lua" )
+Inc( "config/sh_config.lua" )
+Inc( "libraries/sh_cami.lua" )
 -- DarkRP/FAdmin support libraries (fn must load before tablecheck, both before FAdmin)
-include( "libraries/falib/fn.lua" )
-include( "libraries/falib/tablecheck.lua" )
-include( "libraries/sh_swgrp.lua" )
-include( "libraries/sh_modelmap.lua" )
-include( "modules/sh_doors.lua" )
-include( "libraries/sh_util.lua" )
-include( "libraries/sh_player.lua" )
-include( "libraries/sh_fadmin_compat.lua" )
-include( "modules/fadmin/sh_fadmin_darkrp.lua" )
-include( "libraries/sh_network.lua" )
-include( "libraries/sh_hooks.lua" )
-include( "libraries/sh_fadmin.lua" )
-include( "libraries/sh_admin.lua" )
-include( "language/sh_english.lua" )
-include( "player_class/player_swgrp.lua" )
+Inc( "libraries/falib/fn.lua" )
+Inc( "libraries/falib/tablecheck.lua" )
+Inc( "libraries/sh_swgrp.lua" )
+Inc( "libraries/sh_modelmap.lua" )
+Inc( "modules/sh_doors.lua" )
+Inc( "libraries/sh_util.lua" )
+Inc( "libraries/sh_player.lua" )
+Inc( "libraries/sh_fadmin_compat.lua" )
+Inc( "modules/fadmin/sh_fadmin_darkrp.lua" )
+Inc( "libraries/sh_network.lua" )
+Inc( "libraries/sh_hooks.lua" )
+Inc( "libraries/sh_fadmin.lua" )
+Inc( "libraries/sh_admin.lua" )
+Inc( "language/sh_english.lua" )
+Inc( "player_class/player_swgrp.lua" )
 
 -- Content registration (shared)
-include( "modules/sh_categories.lua" )
-include( "modules/sh_allegiances.lua" )
-include( "libraries/sh_content_loader.lua" )
+Inc( "modules/sh_categories.lua" )
+Inc( "modules/sh_allegiances.lua" )
+Inc( "libraries/sh_content_loader.lua" )
 SWGRP.Content.LoadAll()
-include( "modules/sh_doorgroups.lua" )
-include( "modules/sh_recipes.lua" )
-include( "modules/sh_missions.lua" )
-include( "modules/sh_contraband.lua" )
-include( "modules/sh_spawnallowlist.lua" )
+Inc( "modules/sh_doorgroups.lua" )
+Inc( "modules/sh_recipes.lua" )
+Inc( "modules/sh_missions.lua" )
+Inc( "modules/sh_contraband.lua" )
+Inc( "modules/sh_spawnallowlist.lua" )
 
 -- Custom extensions (add professions, entities, etc. without editing core)
-local customFiles = file.Find( "custom/*.lua", "LUA" )
+local customRoot = GM.FolderName .. "/gamemode/custom/"
+local customFiles = file.Find( customRoot .. "*.lua", "LUA" )
 for _, f in ipairs( customFiles ) do
 	if not string.find( f, "example" ) then
-		include( "custom/" .. f )
+		include( customRoot .. f )
 	end
 end
 

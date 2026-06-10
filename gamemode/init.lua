@@ -2,14 +2,18 @@
     SWGRP Server Initialization
 ---------------------------------------------------------------------------]]
 
-AddCSLuaFile( "cl_init.lua" )
-AddCSLuaFile( "shared.lua" )
-
--- Register client/shared scripts for connecting players.
--- file.Find(..., "LUA") with relative paths is unreliable on Linux srcds; scan the
--- real gamemodes/ tree with GAME instead (same approach as bundled FAdmin).
 local gmFolder = GM.FolderName or "swgrp"
 local gmDiskRoot = "gamemodes/" .. gmFolder .. "/gamemode"
+local gmLuaRoot = gmFolder .. "/gamemode"
+
+AddCSLuaFile( "cl_init.lua" )
+AddCSLuaFile( "shared.lua" )
+AddCSLuaFile( gmLuaRoot .. "/cl_init.lua" )
+AddCSLuaFile( gmLuaRoot .. "/shared.lua" )
+
+-- Register client/shared scripts for connecting players.
+-- Paths must match include() in shared.lua / cl_init.lua: swgrp/gamemode/...
+-- file.Find(..., "LUA") with relative paths is unreliable on Linux srcds; scan GAME.
 local csLuaCount = 0
 
 local function ShouldSendToClient( relPath )
@@ -29,7 +33,7 @@ local function AddCSLuaFilesDir( subdir )
 		if string.EndsWith( f, ".lua" ) then
 			local rel = subdir .. "/" .. f
 			if ShouldSendToClient( rel ) then
-				AddCSLuaFile( rel )
+				AddCSLuaFile( gmLuaRoot .. "/" .. rel )
 				csLuaCount = csLuaCount + 1
 			end
 		end
@@ -42,6 +46,9 @@ local function AddCSLuaFilesDir( subdir )
 	end
 end
 
+AddCSLuaFile( gmLuaRoot .. "/libraries/sh_cami.lua" )
+AddCSLuaFile( gmLuaRoot .. "/libraries/sh_fadmin_compat.lua" )
+AddCSLuaFile( gmLuaRoot .. "/modules/fadmin/sh_fadmin_darkrp.lua" )
 AddCSLuaFile( "libraries/sh_cami.lua" )
 AddCSLuaFile( "libraries/sh_fadmin_compat.lua" )
 AddCSLuaFile( "modules/fadmin/sh_fadmin_darkrp.lua" )
