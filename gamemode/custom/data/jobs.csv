@@ -1,3 +1,2 @@
 # Add extra professions here (merged after data/jobs.csv)
 # name,command,category,allegiance,color,models,description,weapons,salary,max,admin,vote,flags
-#Stormtrooper Commander,stormtrooper,Imperial Forces,IMPERIAL,200 200 220,models/Player/SGG/Starwars/stormtrooper.mdl,Enforce Imperial law. Protect and serve the Empire.,weapon_pistol|swgrp_arrest_baton|swgrp_stun_baton|swgrp_keys,85,6,0,1,stormtrooper

@@ -115,17 +115,18 @@ Formatting rules:
 - **Lists** (`models`, `weapons`, `entities`) are `|`-separated.
 - **`allowed`** is a quoted, comma-separated list of profession `command`s, or `*` / blank for everyone.
 - **`color`** is `R G B` (space or comma separated).
-- **`flags`** is a space/comma list: `hobo cook medic doctor bountyhunter hasLicense governor officer stormtrooper commander chief whitelist disguise captain`.
+- **`flags`** is a space/comma list: `hobo cook medic doctor bountyhunter hasLicense governor officer stormtrooper commander chief whitelist disguise captain hireable`.
 - Lines starting with `#` are comments. Reload at runtime (superadmin) with `swgrp_reloadcontent`.
 - Validate `jobs.csv` before deploy: `python tools/lint_jobs_csv.py` (see `tools/README.md`).
 
 Full column-by-column reference and examples: **[GUIDE.md → Authoring Content](GUIDE.md#authoring-content-csv)**.
 
-## Professions (20)
+## Professions (22)
 
 | Category | Professions |
 |----------|-------------|
 | Civilians | Colonist, Refugee, Merchant, Artisan, Entertainer, Cantina Operator, Doctor |
+| Droids (hireable) | Combat Droid, Service Droid |
 | Combat Professions | Smuggler, Bounty Hunter, Commando, Arms Dealer, Combat Medic |
 | Imperial Forces | Stormtrooper Captain, Stormtrooper, Imperial Officer, Imperial Security Bureau, Imperial Royal Guard, The Emperor |
 | Rebel Alliance | Rebel Soldier, Rebel Pilot |
@@ -225,9 +226,9 @@ SWGRP.RegisterJob("Example", {
 - Low hunger causes damage; starvation possible
 
 ### Refugee Junk Piles
-- Map spawns scavengable **junk piles** (`swgrp_junk_pile`) near player starts (ConVar `swgrp_junkpiles`)
+- Map-wide scavengable **junk piles** (`swgrp_junk_pile`) spread across the playable map (ConVar `swgrp_junkpiles`)
 - **Refugees only** — press **E** to scavenge for credits, random food, or a rare SE-14C blaster
-- After scavenging, a **new pile falls from the sky** at a **random nearby location** (anti-camp)
+- After scavenging, a **new pile falls from the sky** at another **random map location** (anti-camp)
 - Per-player scavenge cooldown (`swgrp_junkpile_player_cd`, default 30s)
 
 ### Missions
@@ -334,7 +335,6 @@ SWGRP.RegisterJob("Example", {
 | `swgrp_dropcreditlimit` | 10000 | Max credits per `/dropcredits` |
 | `swgrp_junkpiles` | 1 | Enable refugee junk pile map spawns |
 | `swgrp_junkpile_count` | 16 | Junk piles to spawn per map |
-| `swgrp_junkpile_drop_radius` | 720 | Max horizontal scatter when a pile respawns from the sky |
 | `swgrp_junkpile_player_cd` | 30 | Seconds between junk scavenges per player |
 | `swgrp_junkpile_food_chance` | 0.12 | Chance food drops instead of credits (after weapon roll) |
 | `swgrp_sandbox_tools` | 1 | Sandbox tools: 0=off, 1=everyone, 2=FAdmin privilege only |

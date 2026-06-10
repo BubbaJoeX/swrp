@@ -231,7 +231,6 @@ Configure via the **Create Multiplayer Game** settings panel, or set ConVars in 
 | `swgrp_junkpile_weapon_chance` | 0.06 | Chance to salvage the junk-pile weapon |
 | `swgrp_junkpile_weapon_class` | `weapon_752_se14c` | Weapon class for junk pile weapon roll |
 | `swgrp_junkpile_drop_height` | 520 | Sky-drop height when a pile respawns |
-| `swgrp_junkpile_drop_radius` | 720 | Max horizontal scatter for respawn drops |
 | `swgrp_junkpile_food_chance` | 0.12 | Food drop chance (after weapon roll fails) |
 | `swgrp_junkpile_player_cd` | 30 | Per-player seconds between junk scavenges |
 | `swgrp_sandbox_tools` | 1 | Sandbox tools: `0` off, `1` everyone (physgun/toolgun/gravgun), `2` FAdmin privilege only |
@@ -269,7 +268,7 @@ swgrp_sandbox_tools 2
 ## Gameplay Guide
 
 ### Choosing a profession
-Open **F4 → Professions**, pick a faction on the left rail (Neutral / Imperial / Rebel / Underworld), select a job, then **Assume Profession**. If a job has multiple models you'll get an appearance picker. Restricted jobs may require a **vote** or a **whitelist**.
+Open **F4 → Professions**, pick a faction on the left rail (Neutral / Imperial / Rebel / Underworld), select a job, then **Assume Role** (or **Assume Role (Start Vote)** if the profession requires a colony vote). If a job has multiple models you'll get an appearance picker. Restricted jobs may also require a **whitelist**.
 
 ### Economy
 - You earn **salary** every payday (`swgrp_paydayinterval`). Non-governors pay **Imperial tax** if enabled.
@@ -314,7 +313,7 @@ Underworld roles (Smuggler, etc.) can acquire **contraband** (spice, illegal wea
 **Food** — same flow at a **Ration Terminal** (`swgrp_ration_dispenser`); crafts physical `swgrp_food` pickups. Press **E** to eat. Both can be **pocketed** and dropped later.
 
 ### Refugee scavenging
-**Refugees** can scavenge map-spawned **junk piles** (`swgrp_junk_pile`) for credits, occasional food pickups, or a rare blaster salvage. After each scavenge the pile is removed and a **new one falls from the sky** at a **random nearby spot** (within `swgrp_junkpile_drop_radius`) so one location cannot be farmed. A per-player cooldown applies (`swgrp_junkpile_player_cd`). Toggle spawns with `swgrp_junkpiles`.
+**Refugees** can scavenge **junk piles** (`swgrp_junk_pile`) spread across the **entire map** for credits, occasional food pickups, or a rare blaster salvage. After each scavenge the pile is removed and a **new one falls from the sky** at another **random map location** so one spot cannot be farmed. A per-player cooldown applies (`swgrp_junkpile_player_cd`). Toggle spawns with `swgrp_junkpiles`.
 
 ### Structures & ownership
 Purchased equipment (F4 **Equipment** tab, shipments, spice/food crafts, etc.) assigns an **owner**. Only that owner (or admins) may **physgun**, **grav gun**, **toolgun**, or **pocket** the entity. Sandbox-spawned props you place still get owner protection via `PlayerSpawnedProp`. Physgun and toolgun **mouse wheel** scroll is passed through while dragging or using stools (e.g. SubMaterial) so SWGRP menus do not steal weapon cycling.
@@ -376,7 +375,7 @@ General rules for every file:
 | `vote` | bool | `1`/`true` requires a colony vote to join |
 | `flags` | list (space/comma) | Special abilities (see below) |
 
-**Job flags:** `hobo`, `cook`, `medic`, `doctor`, `bountyhunter`, `hasLicense`, `governor`, `officer`, `stormtrooper`, `commander`, `chief`, `whitelist`, `disguise`, `captain`.
+**Job flags:** `hobo`, `cook`, `medic`, `doctor`, `bountyhunter`, `hasLicense`, `governor`, `officer`, `stormtrooper`, `commander`, `chief`, `whitelist`, `disguise`, `captain`, `hireable` (F4 shows a **Hireable** badge and contract text for droid professions).
 
 Example row:
 ```csv

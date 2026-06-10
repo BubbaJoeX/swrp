@@ -6,9 +6,11 @@ Artisan,artisan,Civilians,NEUTRAL,180 120 60,models/konnie/swgoh/pack/raddus.mdl
 Entertainer,entertainer,Civilians,NEUTRAL,255 100 200,models/konnie/swgoh/pack3/huttslayerleia.mdl,Perform music and dance in cantinas across the galaxy.,,50,3,0,0,
 Cantina Operator,cantina,Civilians,NEUTRAL,200 100 50,models/player/grady/starwars/duros_padawan.mdl,Serve refreshments. The heart of any spaceport.,,55,2,0,0,cook
 Doctor,doctor,Civilians,NEUTRAL,50 200 200,models/1/pm_scientist_human1.mdl|models/4/pm_scientist_corona.mdl,Treat wounds and illness. A vital colony profession.,weapon_medkit,70,3,0,0,medic doctor
+Combat Droid,combatdroid,Droids,NEUTRAL,140 150 165,models/player/group01/male_02.mdl,A security and combat chassis available for hire. Placeholder model — replace when droid PMs are mounted.,weapon_pistol,25,0,0,0,hireable
+Service Droid,servicedroid,Droids,NEUTRAL,170 175 185,models/player/group01/female_01.mdl,A labor and hospitality chassis available for hire. Placeholder model — replace when droid PMs are mounted.,,25,0,0,0,hireable
 Smuggler,smuggler,Combat Professions,UNDERWORLD,150 50 200,models/player/SGG/Starwars/Rebels/r_soldier_urban/male_02.mdl,Move contraband through Imperial blockades.,weapon_pistol|swgrp_zip_tie|swgrp_disguise|swgrp_keypad_cracker,55,4,0,0,disguise
 Bounty Hunter,bountyhunter,Combat Professions,UNDERWORLD,200 50 50,models/urizel/ig11/ig11_player.mdl|models/konnie/swgoh/pack3/ig11.mdl,Hunt targets with valid contracts.,dc17grapple|weapon_pistol|swgrp_lockpick|swgrp_zip_tie|swgrp_keypad_cracker,60,3,0,0,bountyhunter
-Commando,commando,Combat Professions,UNDERWORLD,100 50 50,models/konnie/swgoh/pack/blackkrrsantan.mdl,Heavy weapons specialist. Frontline fighter.,weapon_swrc_det|weapon_752_t21,65,3,0,1,
+Commando,commando,Combat Professions,UNDERWORLD,100 50 50,models/konnie/swgoh/pack/blackkrrsantan.mdl,Heavy weapons specialist. Frontline fighter.,weapon_smg1,65,3,0,1,
 Arms Dealer,armsdealer,Combat Professions,UNDERWORLD,200 150 50,models/konnie/swgoh/pack/pykecapo.mdl,Legally trade weapons with the proper permits.,,55,2,0,0,hasLicense
 Combat Medic,medic,Combat Professions,UNDERWORLD,50 200 100,models/nada/female/MedicalHazmat.mdl,Field medic supporting combat operations.,weapon_medkit,65,3,0,0,medic
 Imperial Stormtrooper Captain,stormtroopercaptain,Imperial Forces,IMPERIAL,50 220 100,models/Player/SGG/Starwars/sandtrooper_semi.mdl,Oversee the Stormtrooper squadrons.,weapon_pistol|swgrp_arrest_baton|swgrp_stun_baton|swgrp_keys,95,4,0,1,captain
@@ -19,5 +21,3 @@ Imperial Royal Guard,royalguard,Imperial Forces,IMPERIAL,255 200 50,models/guard
 Rebel Soldier,rebel,Rebel Alliance,REBEL,200 60 60,models/player/SGG/Starwars/Rebels/r_soldier_urban/male_04.mdl,Fight the Empire. Covert resistance operative.,weapon_pistol,50,5,0,1,
 Rebel Pilot,rebelpilot,Rebel Alliance,REBEL,255 100 80,models/player/SGG/Starwars/Rebels/r_soldier_urban/male_11.mdl,Fly sorties and support the Rebellion.,weapon_pistol,60,2,0,1,
 The Emperor,governor,Imperial Forces,IMPERIAL,255 200 50,models/konnie/swgoh/pack/palpatineemperor_eternal.mdl,Lead the colony. Set laws taxes and lockdowns.,,150,1,0,1,governor
-Combat Droid,combatdroid,Droids,NEUTRAL,140 150 165,models/mag_base/pm_droid_mag_base.mdl|models/mag_training/pm_droid_mag_training.mdl|models/konnie/bananakin/b2battledroid/b2battledroid.mdl,A security and combat chassis available for hire.,weapon_pistol,25,0,0,0,hireable
-Service Droid,servicedroid,Droids,NEUTRAL,170 175 185,models/ace/sw/r2.mdl|models/ace/sw/r4.mdl|models/ace/sw/r5.mdl|models/KingPommes/starwars/playermodels/gnk.mdl|models/KingPommes/starwars/playermodels/mouse.mdl,A labor and hospitality chassis available for hire.,,25,0,0,0,hireable

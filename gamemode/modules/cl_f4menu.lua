@@ -90,7 +90,10 @@ local function BuildShop( sheet, UI, frame )
 					for _, job in ipairs( factionJobs ) do
 						local teamId = job.team
 						local maxText = ( job.max and job.max > 0 ) and ( "Max slots: " .. job.max ) or "Unlimited slots"
-						local voteText = job.vote and "Requires colony vote" or "Open profession"
+						local voteText = job.vote and "Requires colony vote"
+							or job.hireable and "Available for hire"
+							or "Open profession"
+						local hireNote = job.hireable and "Players may contract you for paid work across the colony.\n" or ""
 
 						-- List the weapons this profession is issued on spawn so players
 						-- can see the loadout before assuming it. Prefer the SWEP's
@@ -102,15 +105,22 @@ local function BuildShop( sheet, UI, frame )
 						end
 						local wepText = #wepNames > 0 and ( "Issued weapons: " .. table.concat( wepNames, ", " ) ) or "Issued weapons: None"
 
+						local subtitle = job.category or "General"
+						if job.hireable then
+							subtitle = subtitle .. " · Hireable"
+						end
+
 						catalog:AddItem( {
 							name = job.name,
-							subtitle = job.category or "General",
-							listSub = SWGRP.FormatCredits( job.salary ) .. " / payday",
-							description = ( job.description or "" ) .. "\n\nAllegiance: " .. faction.name .. "\n" .. maxText .. "\n" .. voteText .. "\n" .. wepText,
+							subtitle = subtitle,
+							listSub = job.hireable
+								and ( "Hireable · " .. SWGRP.FormatCredits( job.salary ) .. " / payday" )
+								or ( SWGRP.FormatCredits( job.salary ) .. " / payday" ),
+							description = hireNote .. ( job.description or "" ) .. "\n\nAllegiance: " .. faction.name .. "\n" .. maxText .. "\n" .. voteText .. "\n" .. wepText,
 							priceText = "Salary: " .. SWGRP.FormatCredits( job.salary ) .. " per payday",
 							model = SWGRP.GetJobPreviewModel( job ),
 							color = job.color or faction.color,
-							actionText = "Assume Profession",
+							actionText = job.vote and "Assume Role (Start Vote)" or "Assume Role",
 							onAction = function()
 								local function submitJob( modelIndex )
 									net.Start( "SWGRP_SetJob" )

@@ -101,7 +101,6 @@ C.JunkPileCreditMax         = CreateConVar( "swgrp_junkpile_credit_max", "100", 
 C.JunkPileWeaponChance      = CreateConVar( "swgrp_junkpile_weapon_chance", "0.06", FCVAR_ARCHIVE + FCVAR_REPLICATED )
 C.JunkPileWeaponClass       = CreateConVar( "swgrp_junkpile_weapon_class", "weapon_752_se14c", FCVAR_ARCHIVE + FCVAR_REPLICATED )
 C.JunkPileDropHeight        = CreateConVar( "swgrp_junkpile_drop_height", "520", FCVAR_ARCHIVE + FCVAR_REPLICATED )
-C.JunkPileDropRadius        = CreateConVar( "swgrp_junkpile_drop_radius", "720", FCVAR_ARCHIVE + FCVAR_REPLICATED )
 C.JunkPileFoodChance        = CreateConVar( "swgrp_junkpile_food_chance", "0.12", FCVAR_ARCHIVE + FCVAR_REPLICATED )
 C.JunkPilePlayerCooldown    = CreateConVar( "swgrp_junkpile_player_cd", "30", FCVAR_ARCHIVE + FCVAR_REPLICATED )
 

@@ -23,7 +23,8 @@ JP.ModelPool = {
 }
 
 local MIN_SPACING_SQR = 360 * 360
-local SPAWN_RADIUS = 2800
+local MAP_EDGE_MARGIN = 384
+local DEFAULT_MAP_HALF = 8192
 
 local function enabled()
 	local cv = SWGRP.Config.JunkPilesEnabled
@@ -57,21 +58,38 @@ function JP.PickModel()
 	return models[math.random( #models )]
 end
 
-function JP.GetAnchors()
-	local anchors = {}
+-- Playable XY bounds from the world hull (map-wide), not player spawns.
+function JP.GetMapBounds()
+	local mins, maxs
 
-	for _, ent in ipairs( ents.FindByClass( "info_player_start" ) ) do
-		table.insert( anchors, ent:GetPos() )
-	end
-	for _, ent in ipairs( ents.FindByClass( "info_player_deathmatch" ) ) do
-		table.insert( anchors, ent:GetPos() )
-	end
-
-	if #anchors == 0 then
-		table.insert( anchors, Vector( 0, 0, 0 ) )
+	local world = game.GetWorld()
+	if IsValid( world ) then
+		mins, maxs = world:GetModelBounds()
 	end
 
-	return anchors
+	if not mins or not maxs or mins:DistToSqr( maxs ) < 1 then
+		mins = Vector( -DEFAULT_MAP_HALF, -DEFAULT_MAP_HALF, 0 )
+		maxs = Vector( DEFAULT_MAP_HALF, DEFAULT_MAP_HALF, 0 )
+	end
+
+	mins = Vector( mins.x + MAP_EDGE_MARGIN, mins.y + MAP_EDGE_MARGIN, 0 )
+	maxs = Vector( maxs.x - MAP_EDGE_MARGIN, maxs.y - MAP_EDGE_MARGIN, 0 )
+
+	if maxs.x <= mins.x or maxs.y <= mins.y then
+		mins = Vector( -DEFAULT_MAP_HALF, -DEFAULT_MAP_HALF, 0 )
+		maxs = Vector( DEFAULT_MAP_HALF, DEFAULT_MAP_HALF, 0 )
+	end
+
+	return mins, maxs
+end
+
+function JP.RandomMapPoint()
+	local mins, maxs = JP.GetMapBounds()
+	return Vector(
+		math.random( math.floor( mins.x ), math.floor( maxs.x ) ),
+		math.random( math.floor( mins.y ), math.floor( maxs.y ) ),
+		0
+	)
 end
 
 local function isWater( pos )
@@ -81,8 +99,8 @@ end
 
 function JP.TraceGround( pos )
 	local tr = util.TraceLine( {
-		start = pos + Vector( 0, 0, 512 ),
-		endpos = pos - Vector( 0, 0, 2048 ),
+		start = pos + Vector( 0, 0, 32768 ),
+		endpos = pos - Vector( 0, 0, 32768 ),
 		mask = MASK_SOLID_BRUSHONLY,
 	} )
 
@@ -110,15 +128,11 @@ function JP.IsFarEnough( pos, placed )
 	return true
 end
 
-function JP.FindSpawnPos( anchors, placed )
-	for _ = 1, 40 do
-		local anchor = anchors[math.random( #anchors )]
-		local offset = Vector(
-			math.random( -SPAWN_RADIUS, SPAWN_RADIUS ),
-			math.random( -SPAWN_RADIUS, SPAWN_RADIUS ),
-			0
-		)
-		local ground = JP.TraceGround( anchor + offset )
+function JP.FindSpawnPos( placed )
+	placed = placed or {}
+
+	for _ = 1, 64 do
+		local ground = JP.TraceGround( JP.RandomMapPoint() )
 		if not ground then continue end
 		if not JP.IsSpotClear( ground ) then continue end
 		if not JP.IsFarEnough( ground, placed ) then continue end
@@ -134,45 +148,24 @@ function JP.Clear()
 	end
 end
 
-function JP.GetDropRadius()
-	local cv = SWGRP.Config.JunkPileDropRadius
-	return math.max( 128, cv and cv:GetInt() or 720 )
-end
-
--- Pick a random ground spot near the scavenged pile so players can't camp one point.
-function JP.FindNearbyDropPos( origin )
-	origin = origin or vector_origin
-	local maxRadius = JP.GetDropRadius()
-	local minDist = math.max( 96, math.floor( maxRadius * 0.4 ) )
-
-	for _ = 1, 32 do
-		local rad = math.rad( math.random( 0, 359 ) )
-		local dist = math.random( minDist, maxRadius )
-		local probe = origin + Vector( math.cos( rad ) * dist, math.sin( rad ) * dist, 0 )
-		local ground = JP.TraceGround( probe )
-		if ground and JP.IsSpotClear( ground ) then
-			return ground
+function JP.GetExistingPilePositions()
+	local placed = {}
+	for _, ent in ipairs( ents.FindByClass( "swgrp_junk_pile" ) ) do
+		if IsValid( ent ) then
+			table.insert( placed, ent:GetPos() )
 		end
 	end
-
-	for _ = 1, 16 do
-		local rad = math.rad( math.random( 0, 359 ) )
-		local dist = math.random( 96, maxRadius )
-		local probe = origin + Vector( math.cos( rad ) * dist, math.sin( rad ) * dist, 0 )
-		local ground = JP.TraceGround( probe )
-		if ground and JP.IsSpotClear( ground ) then
-			return ground
-		end
-	end
-
-	local fallback = JP.TraceGround( origin )
-	if fallback and JP.IsSpotClear( fallback ) then return fallback end
-
-	return origin
+	return placed
 end
 
-function JP.DropFromSky( nearPos, ang )
-	local groundPos = JP.FindNearbyDropPos( nearPos or vector_origin )
+function JP.DropFromSky( nearPos, ang, groundPos )
+	if not groundPos then
+		groundPos = JP.FindSpawnPos( JP.GetExistingPilePositions() )
+	end
+	if not groundPos then
+		groundPos = JP.TraceGround( nearPos or vector_origin ) or nearPos or vector_origin
+	end
+
 	ang = ang or Angle( 0, math.random( 0, 359 ), 0 )
 
 	local heightCv = SWGRP.Config.JunkPileDropHeight
@@ -209,7 +202,7 @@ function JP.DropFromSky( nearPos, ang )
 end
 
 function JP.SpawnOne( pos, ang )
-	return JP.DropFromSky( pos, ang )
+	return JP.DropFromSky( pos, ang, pos )
 end
 
 function JP.SpawnAll()
@@ -220,14 +213,13 @@ function JP.SpawnAll()
 
 	JP.Clear()
 
-	local anchors = JP.GetAnchors()
 	local placed = {}
 	local spawned = 0
 
-	for _ = 1, count * 4 do
+	for _ = 1, count * 8 do
 		if spawned >= count then break end
 
-		local pos = JP.FindSpawnPos( anchors, placed )
+		local pos = JP.FindSpawnPos( placed )
 		if not pos then continue end
 
 		if JP.SpawnOne( pos ) then

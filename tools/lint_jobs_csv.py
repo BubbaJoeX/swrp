@@ -48,6 +48,7 @@ VALID_FLAGS = frozenset(
         "whitelist",
         "disguise",
         "captain",
+        "hireable",
     }
 )
 

@@ -37,6 +37,7 @@ local JOB_FLAGS = {
 	whitelist = "whitelist",
 	disguise = "disguise",
 	captain = "captain",
+	hireable = "hireable",
 }
 
 local ALLEGIANCE_MAP = {
