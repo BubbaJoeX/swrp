@@ -444,7 +444,7 @@ SWGRP.RegisterChatCommand( "sellalldoors", {
 })
 
 SWGRP.RegisterChatCommand( "pocket", {
-	description = "Pocket aimed equipment or your active weapon (Alt+R quick-pocket)",
+	description = "Pocket aimed equipment or your active weapon (Alt+T quick-pocket)",
 	execute = function( ply, args )
 		SWGRP.Pocket.Store( ply )
 	end,
@@ -479,8 +479,9 @@ SWGRP.RegisterChatCommand( "letter", {
 		ent:SetLetterText( text )
 		ent:SetAuthorName( ply:Nick() )
 		ent:Spawn()
-		ent.SWGRP_Owner = ply
-		if ent.CPPISetOwner then ent:CPPISetOwner( ply ) end
+		if SWGRP.Ownership and SWGRP.Ownership.SetOwner then
+			SWGRP.Ownership.SetOwner( ent, ply )
+		end
 		SWGRP.Notify( ply, "Letter dropped." )
 	end,
 })

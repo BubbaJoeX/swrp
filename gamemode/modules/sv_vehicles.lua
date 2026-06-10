@@ -33,10 +33,8 @@ function SWGRP.VehiclesMgr.Buy( ply, vehicleId )
 	ent:SetAngles( ply:GetAngles() )
 	ent:Spawn()
 	ent:Activate()
-	ent.SWGRP_Owner = ply
-	if ent.CPPISetOwner then ent:CPPISetOwner( ply ) end
-	if ent.IsVehicle() then
-		ent:CPPISetOwner( ply )
+	if SWGRP.Ownership and SWGRP.Ownership.SetOwner then
+		SWGRP.Ownership.SetOwner( ent, ply )
 	end
 
 	SWGRP.Notify( ply, "Vehicle purchased: " .. veh.name )

@@ -26,8 +26,8 @@ function SWGRP.OpenMOTD()
 			<li><b>F4</b> - Profession & commerce terminal</li>
 			<li><b>F3</b> - Colony datapad (missions, crafting, status, banking)</li>
 			<li><b>F2</b> - Manage / buy the door you are looking at</li>
-			<li><b>R</b> - Pocket inventory</li>
-			<li><b>Alt + R</b> - Quick-pocket (aimed item or active weapon)</li>
+			<li><b>T</b> - Pocket inventory</li>
+			<li><b>Alt + T</b> - Quick-pocket (aimed item or active weapon)</li>
 		</ul>
 		<h2 style="color:#ffb432;">Chat Commands</h2>
 		<ul>
@@ -45,7 +45,7 @@ function SWGRP.OpenMOTD()
 			<li><b>/lockdown</b> - Governor lockdown</li>
 			<li><b>/give [amount]</b> - Hand credits to the player you look at</li>
 			<li><b>/pocket</b> - Store aimed equipment or active weapon</li>
-			<li><b>/droppocket</b>, <b>R</b>, or <b>Alt+R</b> - Open pocket / quick-store</li>
+			<li><b>/droppocket</b> - Open pocket menu</li>
 			<li><b>/whitelist [name] [job]</b> - Whitelist a player (admin)</li>
 		</ul>
 		<h2 style="color:#ffb432;">Door Commands</h2>
@@ -64,7 +64,7 @@ function SWGRP.OpenMOTD()
 			<li><b>Contraband</b> — /contraband (smugglers), /scan (Imperial)</li>
 			<li><b>Vehicles</b> — F4 Vehicles tab</li>
 			<li><b>Profession XP</b> — Level up by working, missions, crafting</li>
-			<li><b>Pocket</b> — Carry items discreetly (<b>R</b>, <b>Alt+R</b>, /pocket, /droppocket)</li>
+			<li><b>Pocket</b> — Carry items discreetly (<b>T</b>, <b>Alt+T</b>, /pocket, /droppocket)</li>
 			<li><b>Keypads</b> — Buy a Security Keypad to control a door; underworld jobs carry a Keypad Cracker</li>
 			<li><b>Disguise</b> — Smugglers use a Disguise Kit to conceal identity</li>
 			<li><b>New Life Rule</b> — Stay away from your death location after respawning</li>

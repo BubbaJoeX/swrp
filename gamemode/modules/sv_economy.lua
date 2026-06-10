@@ -149,7 +149,9 @@ function SWGRP.Economy.BuyShipment( ply, shipmentId, separate )
 		wep:SetAngles( ang )
 		wep:Spawn()
 		wep:Activate()
-		if wep.CPPISetOwner then wep:CPPISetOwner( ply ) end
+		if SWGRP.Ownership and SWGRP.Ownership.SetOwner then
+			SWGRP.Ownership.SetOwner( wep, ply )
+		end
 		SWGRP.Notify( ply, string.format( "Purchased %s for %s. It dropped in front of you.", ship.name, SWGRP.FormatCredits( price ) ) )
 		SWGRP.Hooks.Call( "SWGRPEntityPurchased", ply, ship.name .. " (single)", price )
 		return
@@ -168,7 +170,9 @@ function SWGRP.Economy.BuyShipment( ply, shipmentId, separate )
 	-- the entity rather than leaving it parked at the world origin or in the floor.
 	ent:SetPos( pos )
 	ent:SetAngles( ang )
-	if ent.CPPISetOwner then ent:CPPISetOwner( ply ) end
+	if SWGRP.Ownership and SWGRP.Ownership.SetOwner then
+		SWGRP.Ownership.SetOwner( ent, ply )
+	end
 	SWGRP.Notify( ply, string.format( "Purchased %s crate (%d items) for %s.", ship.name, ship.amount or 0, SWGRP.FormatCredits( price ) ) )
 	SWGRP.Hooks.Call( "SWGRPEntityPurchased", ply, ship.name .. " crate", price )
 end
@@ -274,8 +278,9 @@ function SWGRP.Economy.CraftSpice( ply, spiceId )
 	ent:SetPos( pos )
 	ent:SetAngles( ang )
 
-	ent.SWGRP_Owner = ply
-	if ent.CPPISetOwner then ent:CPPISetOwner( ply ) end
+	if SWGRP.Ownership and SWGRP.Ownership.SetOwner then
+		SWGRP.Ownership.SetOwner( ent, ply )
+	end
 
 	SWGRP.Notify( ply, string.format( "Crafted %s for %s. It dropped in front of you.", spice.name, SWGRP.FormatCredits( price ) ) )
 	SWGRP.Hooks.Call( "SWGRPSpiceCrafted", ply, spice.name, price )
@@ -319,9 +324,8 @@ function SWGRP.Economy.SpawnStructure( ply, class, pos, ang )
 		if IsValid( phys ) then phys:Wake() end
 	end
 
-	if IsValid( ply ) then
-		ent.SWGRP_Owner = ply
-		if ent.CPPISetOwner then ent:CPPISetOwner( ply ) end
+	if IsValid( ply ) and SWGRP.Ownership and SWGRP.Ownership.SetOwner then
+		SWGRP.Ownership.SetOwner( ent, ply )
 	end
 
 	return ent
@@ -339,7 +343,9 @@ function SWGRP.Economy.BuyEntity( ply, class )
 
 	local count = 0
 	for _, ent in ipairs( ents.FindByClass( class ) ) do
-		if ent.SWGRP_Owner == ply then count = count + 1 end
+		if SWGRP.Ownership and SWGRP.Ownership.IsOwner( ply, ent ) then
+			count = count + 1
+		end
 	end
 	if data.max and data.max > 0 and count >= data.max then
 		SWGRP.Notify( ply, "Maximum number of that structure reached." )

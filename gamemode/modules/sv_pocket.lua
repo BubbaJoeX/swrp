@@ -164,9 +164,12 @@ function SWGRP.Pocket.CanPocketEntity( ply, ent )
 	if string.sub( class, 1, 6 ) ~= "swgrp_" then return false end
 	if class == "swgrp_dropped_credits" then return false end
 
+	if SWGRP.Ownership and SWGRP.Ownership.CanTouch then
+		return SWGRP.Ownership.CanTouch( ply, ent )
+	end
+
 	if ent.SWGRP_Owner == ply then return true end
 	if isfunction( ent.CPPIGetOwner ) and ent:CPPIGetOwner() == ply then return true end
-	if ply:IsAdmin() then return true end
 
 	return false
 end
@@ -388,8 +391,12 @@ local function spawnEntity( ply, item )
 
 	SWGRP.Pocket.RestoreEntity( ent, item, ply )
 
-	ent.SWGRP_Owner = ply
-	if ent.CPPISetOwner then ent:CPPISetOwner( ply ) end
+	if SWGRP.Ownership and SWGRP.Ownership.SetOwner then
+		SWGRP.Ownership.SetOwner( ent, ply )
+	else
+		ent.SWGRP_Owner = ply
+		if ent.CPPISetOwner then ent:CPPISetOwner( ply ) end
+	end
 
 	ent:SetPos( pos )
 	ent:SetAngles( ang )
@@ -418,6 +425,15 @@ local function writeItem( item )
 	net.WriteString( item.kind )
 	net.WriteString( item.class )
 	net.WriteString( util.TableToJSON( item.state or {} ) )
+end
+
+local function pocketAllowed( ply )
+	if not IsValid( ply ) then return false end
+	if ply:SWGRP_IsRestrained() or ply:SWGRP_IsArrested() then
+		SWGRP.Notify( ply, "You can't use your pocket right now." )
+		return false
+	end
+	return true
 end
 
 local function syncPocket( ply )
@@ -505,7 +521,7 @@ local function itemLabel( item )
 end
 
 function SWGRP.Pocket.Drop( ply, slot )
-	if not IsValid( ply ) then return end
+	if not pocketAllowed( ply ) then return end
 
 	slot = tonumber( slot )
 	if not slot or slot < 1 or slot > SWGRP.Pocket.Max() then return end
@@ -530,6 +546,7 @@ function SWGRP.Pocket.Drop( ply, slot )
 end
 
 function SWGRP.Pocket.Swap( ply, a, b )
+	if not pocketAllowed( ply ) then return end
 	a, b = tonumber( a ), tonumber( b )
 	if not a or not b or a < 1 or a > SWGRP.Pocket.Max() or b < 1 or b > SWGRP.Pocket.Max() then return end
 	if a == b then return end
@@ -540,7 +557,7 @@ function SWGRP.Pocket.Swap( ply, a, b )
 end
 
 function SWGRP.Pocket.StoreWeapon( ply, slot, class )
-	if not IsValid( ply ) or ply:SWGRP_IsRestrained() or ply:SWGRP_IsArrested() then return false end
+	if not pocketAllowed( ply ) then return false end
 	if not class or class == "" or BLOCKED[class] then
 		SWGRP.Notify( ply, "You cannot pocket that item." )
 		return false
@@ -574,7 +591,8 @@ function SWGRP.Pocket.StoreWeapon( ply, slot, class )
 end
 
 function SWGRP.Pocket.StoreEntity( ply, ent, slot )
-	if not IsValid( ply ) or not IsValid( ent ) then return false end
+	if not pocketAllowed( ply ) then return false end
+	if not IsValid( ent ) then return false end
 	if not SWGRP.Pocket.CanPocketEntity( ply, ent ) then return false end
 
 	local slots = SWGRP.Pocket.GetSlots( ply )
@@ -596,7 +614,7 @@ function SWGRP.Pocket.StoreEntity( ply, ent, slot )
 end
 
 function SWGRP.Pocket.Store( ply, silent )
-	if not IsValid( ply ) or ply:SWGRP_IsRestrained() or ply:SWGRP_IsArrested() then return false end
+	if not pocketAllowed( ply ) then return false end
 
 	local tr = ply:GetEyeTrace()
 	local ent = tr.Entity
