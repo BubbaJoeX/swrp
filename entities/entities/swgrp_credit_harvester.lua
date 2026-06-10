@@ -128,6 +128,20 @@ if SERVER then
 			return
 		end
 
+		if IsValid( self.SWGRP_MountCase ) then
+			local total, presses = self.SWGRP_MountCase:CollectAllMounted( activator )
+			if total > 0 then
+				SWGRP.Notify( activator, string.format(
+					"Collected %s from %d mounted press(es).",
+					SWGRP.FormatCredits( total ),
+					presses
+				) )
+			else
+				SWGRP.Notify( activator, "Nothing banked on mounted presses yet." )
+			end
+			return
+		end
+
 		local stored = self:GetStoredCredits()
 		if stored <= 0 then
 			SWGRP.Notify( activator, "Nothing banked yet. The harvester is still printing." )
@@ -141,6 +155,13 @@ if SERVER then
 
 	function ENT:OnRemove()
 		timer.Remove( "SWGRP_Harvester_" .. self:EntIndex() )
+
+		local case = self.SWGRP_MountCase
+		local slot = self.SWGRP_MountSlot
+		if IsValid( case ) and slot and case.SWGRP_MountedPresses then
+			case.SWGRP_MountedPresses[slot] = nil
+			case:SyncMountedCount()
+		end
 	end
 end
 

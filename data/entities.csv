@@ -8,13 +8,13 @@ swgrp_ammo_crate,Energy Cell,models/starwars/items/energy_cell.mdl,350,2,buyammo
 swgrp_armor_station,Armor Kiosk,models/starwars/items/shield_large.mdl,400,1,buyarmor,"artisan,commando",Health & Services
 swgrp_galactic_atm,Galactic Bank,models/kingpommes/emperors_tower/ph_props/palp_panel1/palp_panel1.mdl,300,2,buyatm,"merchant,governor,colonist",Commerce
 swgrp_mission_terminal,Mission Terminal,models/lordtrilobite/starwars/isd/imp_console_small01.mdl,500,1,buymissionterm,"governor,merchant",Commerce
-swgrp_tipjar,Tip Jar,models/props_lab/jar01b.mdl,50,2,buytipjar,"entertainer,cantina",Commerce
-swgrp_holo_sign,Holo-Sign,models/hunter/plates/plate1x1.mdl,75,4,buysign,*,Misc
+swgrp_tipjar,Tip Jar,models/starwars/syphadias/props/sw_tor/bioware_ea/items/harvesting/scavenge/scavenge_barrel.mdl,50,2,buytipjar,"entertainer,cantina",Commerce
+swgrp_holo_sign,Holo-Sign,models/squiddy/hologram_01.mdl,75,4,buysign,*,Misc
 swgrp_letter,Datapad,models/swcw_items/sw_datapad.mdl,25,5,buyletter,*,Misc
 swgrp_keypad,Security Keypad,models/props_lab/keypad.mdl,150,8,buykeypad,*,Misc
-swgrp_spice_terminal,Spice Storage Terminal,models/props/starwars/vehicles/bd_dispenser.mdl,650,2,buyspiceterm,*,Commerce
-swgrp_casino_machine_s01,Casino Machine (Classic),models/props/starwars/tech/imp_datapad.mdl,800,2,buycasino1,"cantina",Commerce
-swgrp_casino_machine_s02,Casino Machine (Neon),models/props/starwars/tech/imp_datapad.mdl,900,2,buycasino2,"cantina",Commerce
-swgrp_credit_press_case,Credit Press Case,models/props_c17/suitcase_passenger_physics.mdl,400,2,buypresscase,*,Commerce
-swgrp_vehicle_license,Vehicle License,models/lordtrilobite/starwars/props/imp_datatape.mdl,150,1,buyvehlicense,"governor,officer,stormtroopercaptain",Misc
-swgrp_weapon_license,Weapon License,models/lordtrilobite/starwars/props/imp_datatape.mdl,150,1,buyweaponlicense,"governor,officer,stormtroopercaptain,armsdealer",Misc
+swgrp_spice_terminal,Spice Storage Terminal,models/props/starwars/vehicles/bd_dispenser.mdl,650,2,buyspiceterm,*,Black Market
+swgrp_casino_machine_s01,Casino Machine (Classic),models/props/starwars/tech/imp_datapad.mdl,800,2,buycasino1,"cantina",Entertainment
+swgrp_casino_machine_s02,Casino Machine (Neon),models/props/starwars/tech/imp_datapad.mdl,900,2,buycasino2,"cantina",Entertainment
+swgrp_credit_press_case,Credit Press Case,models/starwars/syphadias/props/sw_tor/bioware_ea/props/city/city_wall_tech_02.mdl,400,2,buypresscase,*,Black Market
+swgrp_vehicle_license,Vehicle License,models/lordtrilobite/starwars/props/imp_datatape.mdl,150,1,buyvehlicense,"governor,officer,stormtroopercaptain",Licensure
+swgrp_weapon_license,Weapon License,models/lordtrilobite/starwars/props/imp_datatape.mdl,150,1,buyweaponlicense,"governor,officer,stormtroopercaptain,armsdealer",Licensure

@@ -8,6 +8,9 @@ SWGRP.MountOffset = SWGRP.MountOffset or {}
 local MO = SWGRP.MountOffset
 MO.Client = MO.Client or { offsets = {}, mainName = "none", parentFrozen = false }
 
+local menuKeyFrame = -1
+local clearKeyFrame = -1
+
 local function fmtNum( n )
 	n = tonumber( n ) or 0
 	if math.abs( n - math.Round( n ) ) < 0.0005 then
@@ -41,6 +44,22 @@ function MO.BuildMountOffsetsLua( offsets )
 	return table.concat( lines, "\n" )
 end
 
+local function HasMountTool()
+	local ply = LocalPlayer()
+	if not IsValid( ply ) then return false end
+	local wep = ply:GetActiveWeapon()
+	return IsValid( wep ) and wep:GetClass() == "swgrp_admin_mountoffset"
+end
+
+local function ToolInputBlocked()
+	local ply = LocalPlayer()
+	if not IsValid( ply ) then return true end
+	if gui.IsConsoleVisible() or gui.IsGameUIVisible() or ply:IsTyping() then return true end
+	if IsValid( g_SpawnMenu ) and g_SpawnMenu:IsVisible() then return true end
+	if IsValid( g_ContextMenu ) and g_ContextMenu:IsVisible() then return true end
+	return false
+end
+
 local function SendAction( action )
 	net.Start( "SWGRP_MountOffsetAction" )
 		net.WriteString( action )
@@ -52,21 +71,41 @@ local function refreshOutput( output )
 	output:SetText( MO.BuildMountOffsetsLua( MO.Client.offsets ) )
 end
 
+function MO.CloseMenu()
+	if IsValid( MO.Menu ) then
+		MO.Menu:Remove()
+	end
+	MO.Menu = nil
+end
+
 function MO.OpenMenu()
 	local UI = SWGRP.UI
-	if not UI or not UI.CreateTerminalFrame then return end
+	if not UI or not UI.CreateTerminalFrame then
+		chat.AddText( Color( 255, 180, 50 ), "[SWGRP] ", color_white, "Mount offset UI failed to load. Reconnect or reload the gamemode." )
+		return
+	end
 
 	if IsValid( MO.Menu ) then
 		MO.Menu:MakePopup()
+		MO.Menu:Center()
+		MO.RefreshSlotFields()
 		return
 	end
+
+	UI.SyncColors()
 
 	local frame = UI.CreateTerminalFrame( "MOUNT OFFSETS", 420, 640 )
 	MO.Menu = frame
 
+	frame.OnRemove = function()
+		if MO.Menu == frame then
+			MO.Menu = nil
+		end
+	end
+
 	local body = vgui.Create( "DScrollPanel", frame )
 	body:Dock( FILL )
-	body:DockMargin( UI.Spacing.frame, 34, UI.Spacing.frame, UI.Spacing.frame )
+	body:DockMargin( UI.Spacing.frame, 40, UI.Spacing.frame, UI.Spacing.frame )
 	body.Paint = function() end
 	if UI.StyleScrollPanel then UI.StyleScrollPanel( body ) end
 
@@ -97,7 +136,13 @@ function MO.OpenMenu()
 	)
 
 	label(
-		"1) RMB parent  2) Reload freezes parent to +X  3) LMB click prop or world for local offset",
+		"M — toggle this menu · Del — clear all offsets",
+		"DermaDefaultBold",
+		UI.Colors.accent
+	)
+
+	label(
+		"RMB parent · Reload freeze north · LMB capture face (model sits on surface)",
 		"DermaDefault",
 		UI.Colors.secondary
 	)
@@ -135,6 +180,14 @@ function MO.OpenMenu()
 	end )
 
 	MO.RefreshSlotFields()
+end
+
+function MO.ToggleMenu()
+	if IsValid( MO.Menu ) then
+		MO.CloseMenu()
+	else
+		MO.OpenMenu()
+	end
 end
 
 function MO.RefreshSlotFields()
@@ -219,6 +272,35 @@ net.Receive( "SWGRP_MountOffsetSync", function()
 	MO.RefreshSlotFields()
 end )
 
+net.Receive( "SWGRP_MountOffsetMenu", function()
+	MO.OpenMenu()
+end )
+
+hook.Add( "Think", "SWGRP_MountOffsetKeys", function()
+	if not HasMountTool() or ToolInputBlocked() then return end
+
+	local frame = FrameNumber()
+
+	if input.WasKeyPressed( KEY_M ) and menuKeyFrame ~= frame then
+		menuKeyFrame = frame
+		MO.ToggleMenu()
+	end
+
+	if input.WasKeyPressed( KEY_DELETE ) and clearKeyFrame ~= frame then
+		clearKeyFrame = frame
+		SendAction( "clear" )
+	end
+end )
+
+concommand.Add( "swgrp_mountoffset_menu", function()
+	MO.ToggleMenu()
+end )
+
+concommand.Add( "swgrp_mountoffset_clear", function()
+	if not HasMountTool() then return end
+	SendAction( "clear" )
+end )
+
 hook.Add( "PostDrawTranslucentRenderables", "SWGRP_MountOffsetPreview", function( _, skybox )
 	if skybox then return end
 
@@ -249,6 +331,21 @@ hook.Add( "PostDrawTranslucentRenderables", "SWGRP_MountOffsetPreview", function
 
 	for _, entry in ipairs( MO.Client.offsets or {} ) do
 		local pos = main:LocalToWorld( entry.pos )
-		render.DrawWireframeBox( pos, main:LocalToWorldAngles( entry.ang ), Vector( -4, -4, -4 ), Vector( 4, 4, 4 ), Color( 255, 180, 50 ), true )
+		local ang = main:LocalToWorldAngles( entry.ang )
+		render.DrawWireframeBox( pos, ang, Vector( -6, -6, 0 ), Vector( 6, 6, 10 ), Color( 255, 180, 50 ), true )
+		render.DrawLine( pos, pos + ang:Up() * 20, Color( 120, 255, 160 ), true )
+	end
+
+	local tr = util.TraceLine( {
+		start = ply:GetShootPos(),
+		endpos = ply:GetShootPos() + ply:GetAimVector() * 2048,
+		filter = ply,
+	} )
+
+	if tr.Hit then
+		local previewAng = MO.WorldAnglesOnSurface( tr.HitNormal )
+		render.DrawWireframeBox( tr.HitPos, previewAng, Vector( -6, -6, 0 ), Vector( 6, 6, 10 ), Color( 80, 255, 120, 180 ), true )
+		render.DrawLine( tr.HitPos, tr.HitPos + tr.HitNormal * 28, Color( 255, 255, 120 ), true )
+		render.DrawLine( tr.HitPos, tr.HitPos + previewAng:Up() * 22, Color( 120, 255, 160 ), true )
 	end
 end )

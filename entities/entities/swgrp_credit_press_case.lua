@@ -6,15 +6,18 @@ ENT.PrintName = "Credit Press Case"
 ENT.Category = "SWGRP"
 ENT.Spawnable = false
 
--- WIP mount frame; sub-coordinate offsets for press placement are scripted here
--- when the final case model ships.
-ENT.DefaultModel = "models/props_c17/suitcase_passenger_physics.mdl"
+ENT.DefaultModel = "models/starwars/syphadias/props/sw_tor/bioware_ea/props/city/city_wall_tech_02.mdl"
 ENT.MountOffsets = {
-	{ pos = Vector( 0, 0, 8 ), ang = Angle( 0, 0, 0 ) },
+	{ pos = Vector( 6.7368, 16.25, 22.8301 ), ang = Angle( 0, 0, 0 ) },
+	{ pos = Vector( 7.3599, -4.9868, 22.8301 ), ang = Angle( 0, 0, 0 ) },
 }
 
 function ENT:SetupDataTables()
-	self:NetworkVar( "Bool", 0, "HasPress" )
+	self:NetworkVar( "Int", 0, "MountedCount" )
+end
+
+function ENT:GetMaxMounts()
+	return #( self.MountOffsets or {} )
 end
 
 if SERVER then
@@ -24,8 +27,8 @@ if SERVER then
 		self:SetMoveType( MOVETYPE_VPHYSICS )
 		self:SetSolid( SOLID_VPHYSICS )
 		self:SetUseType( SIMPLE_USE )
-		self:SetHasPress( false )
-		self.SWGRP_MountedPress = nil
+		self:SetMountedCount( 0 )
+		self.SWGRP_MountedPresses = {}
 
 		local phys = self:GetPhysicsObject()
 		if IsValid( phys ) then phys:Wake() end
@@ -34,16 +37,74 @@ if SERVER then
 	function ENT:GetMountTransform( slot )
 		slot = slot or 1
 		local offset = self.MountOffsets[slot] or self.MountOffsets[1]
+		if not offset then return self:GetPos(), self:GetAngles() end
+
 		local pos = self:LocalToWorld( offset.pos )
 		local ang = self:LocalToWorldAngles( offset.ang )
 		return pos, ang
 	end
 
-	function ENT:MountPress( press )
-		if not IsValid( press ) or press:GetClass() ~= "swgrp_credit_harvester" then return false end
-		if self:GetHasPress() then return false end
+	function ENT:FindEmptySlot()
+		for i = 1, self:GetMaxMounts() do
+			if not IsValid( self.SWGRP_MountedPresses[i] ) then
+				return i
+			end
+		end
+	end
 
-		local pos, ang = self:GetMountTransform( 1 )
+	function ENT:GetMountedPress( slot )
+		return self.SWGRP_MountedPresses[slot]
+	end
+
+	function ENT:CountMounted()
+		local n = 0
+		for i = 1, self:GetMaxMounts() do
+			if IsValid( self.SWGRP_MountedPresses[i] ) then
+				n = n + 1
+			end
+		end
+		return n
+	end
+
+	function ENT:SyncMountedCount()
+		self:SetMountedCount( self:CountMounted() )
+	end
+
+	function ENT:IsPressMountable( press, owner )
+		if not IsValid( press ) or press:GetClass() ~= "swgrp_credit_harvester" then
+			return false
+		end
+
+		if IsValid( press:GetParent() ) and press:GetParent() ~= self then
+			return false
+		end
+
+		if IsValid( press.SWGRP_MountCase ) and press.SWGRP_MountCase ~= self then
+			return false
+		end
+
+		for i = 1, self:GetMaxMounts() do
+			if self.SWGRP_MountedPresses[i] == press then
+				return false
+			end
+		end
+
+		if SWGRP.Ownership and not SWGRP.Ownership.IsOwner( owner, press ) then
+			return false
+		end
+
+		return true
+	end
+
+	function ENT:MountPress( press, slot )
+		if not IsValid( press ) or press:GetClass() ~= "swgrp_credit_harvester" then
+			return false
+		end
+
+		slot = slot or self:FindEmptySlot()
+		if not slot then return false end
+
+		local pos, ang = self:GetMountTransform( slot )
 		press:SetPos( pos )
 		press:SetAngles( ang )
 		press:SetParent( self )
@@ -51,21 +112,72 @@ if SERVER then
 		local phys = press:GetPhysicsObject()
 		if IsValid( phys ) then phys:EnableMotion( false ) end
 
-		self.SWGRP_MountedPress = press
-		self:SetHasPress( true )
+		press.SWGRP_MountCase = self
+		press.SWGRP_MountSlot = slot
+		self.SWGRP_MountedPresses[slot] = press
+		self:SyncMountedCount()
 		return true
 	end
 
-	function ENT:UnmountPress()
-		if not IsValid( self.SWGRP_MountedPress ) then return end
+	function ENT:UnmountPress( slot )
+		local press = self.SWGRP_MountedPresses[slot]
+		if not IsValid( press ) then return false end
 
-		local press = self.SWGRP_MountedPress
 		press:SetParent( nil )
 		local phys = press:GetPhysicsObject()
 		if IsValid( phys ) then phys:EnableMotion( true ) end
 
-		self.SWGRP_MountedPress = nil
-		self:SetHasPress( false )
+		press.SWGRP_MountCase = nil
+		press.SWGRP_MountSlot = nil
+		self.SWGRP_MountedPresses[slot] = nil
+		self:SyncMountedCount()
+		return true
+	end
+
+	function ENT:UnmountAll()
+		local removed = 0
+		for i = 1, self:GetMaxMounts() do
+			if self:UnmountPress( i ) then
+				removed = removed + 1
+			end
+		end
+		return removed
+	end
+
+	function ENT:CollectAllMounted( activator )
+		local total = 0
+		local presses = 0
+
+		for i = 1, self:GetMaxMounts() do
+			local press = self.SWGRP_MountedPresses[i]
+			if not IsValid( press ) then continue end
+
+			local stored = press:GetStoredCredits()
+			if stored <= 0 then continue end
+
+			activator:SWGRP_AddCredits( stored )
+			press:SetStoredCredits( 0 )
+			total = total + stored
+			presses = presses + 1
+		end
+
+		return total, presses
+	end
+
+	function ENT:FindNearestPress( owner )
+		local nearest, bestDist
+
+		for _, ent in ipairs( ents.FindInSphere( self:GetPos(), 120 ) ) do
+			if not self:IsPressMountable( ent, owner ) then continue end
+
+			local dist = ent:GetPos():DistToSqr( self:GetPos() )
+			if not bestDist or dist < bestDist then
+				bestDist = dist
+				nearest = ent
+			end
+		end
+
+		return nearest
 	end
 
 	function ENT:Use( activator )
@@ -75,36 +187,56 @@ if SERVER then
 			return
 		end
 
-		if self:GetHasPress() then
-			self:UnmountPress()
-			SWGRP.Notify( activator, "Credit press unmounted from case." )
+		if activator:KeyDown( IN_DUCK ) then
+			local removed = self:UnmountAll()
+			if removed > 0 then
+				SWGRP.Notify( activator, "Unmounted " .. removed .. " credit press(es) from case." )
+			else
+				SWGRP.Notify( activator, "No presses mounted on this case." )
+			end
 			return
 		end
 
-		local nearest, bestDist
-		for _, ent in ipairs( ents.FindInSphere( self:GetPos(), 120 ) ) do
-			if ent:GetClass() == "swgrp_credit_harvester" and ent ~= self.SWGRP_MountedPress then
-				local dist = ent:GetPos():DistToSqr( self:GetPos() )
-				if not bestDist or dist < bestDist then
-					bestDist = dist
-					nearest = ent
-				end
-			end
+		local total, presses = self:CollectAllMounted( activator )
+		if total > 0 then
+			SWGRP.Notify( activator, string.format(
+				"Collected %s from %d mounted press(es).",
+				SWGRP.FormatCredits( total ),
+				presses
+			) )
+			return
 		end
 
+		local slot = self:FindEmptySlot()
+		if not slot then
+			SWGRP.Notify( activator, "All mount slots are full. Hold Ctrl and press E to unmount." )
+			return
+		end
+
+		local nearest = self:FindNearestPress( activator )
 		if not IsValid( nearest ) then
 			SWGRP.Notify( activator, "Place a credit press nearby, then press E to mount it." )
 			return
 		end
 
-		if self:MountPress( nearest ) then
-			SWGRP.Notify( activator, "Credit press mounted to case." )
+		if self:MountPress( nearest, slot ) then
+			SWGRP.Notify( activator, string.format(
+				"Credit press mounted in slot %d (%d/%d).",
+				slot,
+				self:CountMounted(),
+				self:GetMaxMounts()
+			) )
 		end
 	end
 
 	function ENT:OnRemove()
-		if IsValid( self.SWGRP_MountedPress ) then
-			self.SWGRP_MountedPress:SetParent( nil )
+		for i = 1, self:GetMaxMounts() do
+			local press = self.SWGRP_MountedPresses[i]
+			if IsValid( press ) then
+				press:SetParent( nil )
+				press.SWGRP_MountCase = nil
+				press.SWGRP_MountSlot = nil
+			end
 		end
 	end
 end
@@ -112,7 +244,17 @@ end
 if CLIENT then
 	function ENT:Draw()
 		self:DrawModel()
-		local status = self:GetHasPress() and "Press mounted" or "Empty case - E to mount"
+
+		local mounted = self.GetMountedCount and self:GetMountedCount() or self:GetNW2Int( "MountedCount", 0 )
+		local maxSlots = self:GetMaxMounts()
+		local status
+
+		if mounted > 0 then
+			status = mounted .. "/" .. maxSlots .. " mounted — E collect all · Ctrl+E unmount"
+		else
+			status = "E mount press (" .. maxSlots .. " slots)"
+		end
+
 		if SWGRP.UI and SWGRP.UI.DrawWorldLabel then
 			SWGRP.UI.DrawWorldLabel( self, "CREDIT PRESS CASE", status, SWGRP.UI.Colors.accent )
 		end

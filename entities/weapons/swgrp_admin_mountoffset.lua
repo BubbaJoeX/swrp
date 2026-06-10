@@ -3,7 +3,7 @@ if SERVER then AddCSLuaFile() end
 SWEP.Base = "weapon_base"
 SWEP.PrintName = "Mount Offset Tool"
 SWEP.Author = "SWGRP"
-SWEP.Instructions = "RMB: set parent. Reload: freeze parent north (+X). LMB: capture offset to click (prop or world). Deploy opens menu."
+SWEP.Instructions = "RMB parent · Reload freeze north · LMB capture · M export menu · Del clear all offsets"
 SWEP.Category = "SWGRP"
 SWEP.Spawnable = true
 SWEP.AdminOnly = true
@@ -35,15 +35,14 @@ function SWEP:Initialize()
 end
 
 function SWEP:Deploy()
-	if SERVER and IsValid( self:GetOwner() ) and SWGRP.MountOffset and SWGRP.MountOffset.SyncTo then
-		SWGRP.MountOffset.SyncTo( self:GetOwner() )
-	end
-	if CLIENT and SWGRP.MountOffset and SWGRP.MountOffset.OpenMenu then
-		timer.Simple( 0, function()
-			if IsValid( self ) and LocalPlayer():GetActiveWeapon() == self then
-				SWGRP.MountOffset.OpenMenu()
-			end
-		end )
+	local owner = self:GetOwner()
+	if SERVER and IsValid( owner ) and SWGRP.MountOffset then
+		if SWGRP.MountOffset.SyncTo then
+			SWGRP.MountOffset.SyncTo( owner )
+		end
+		if SWGRP.MountOffset.OpenMenuFor then
+			SWGRP.MountOffset.OpenMenuFor( owner )
+		end
 	end
 	return true
 end
@@ -105,7 +104,7 @@ function SWEP:DrawHUD()
 		TEXT_ALIGN_CENTER
 	)
 	draw.SimpleText(
-		"RMB parent · Reload freeze north · LMB capture click point",
+		"M menu · Del clear · RMB parent · Reload north · LMB capture",
 		"DermaDefault",
 		ScrW() * 0.5,
 		ScrH() * 0.76 + 18,

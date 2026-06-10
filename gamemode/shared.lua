@@ -44,6 +44,9 @@ Inc( "player_class/player_swgrp.lua" )
 Inc( "modules/sh_categories.lua" )
 Inc( "modules/sh_allegiances.lua" )
 Inc( "modules/sh_vehicles.lua" )
+Inc( "libraries/sh_entity_loader.lua" )
+SWGRP.EntityLoader.LoadAll()
+
 Inc( "libraries/sh_content_loader.lua" )
 SWGRP.Content.LoadAll()
 Inc( "modules/sh_doorgroups.lua" )
@@ -51,6 +54,7 @@ Inc( "modules/sh_recipes.lua" )
 Inc( "modules/sh_missions.lua" )
 Inc( "modules/sh_contraband.lua" )
 Inc( "modules/sh_spawnallowlist.lua" )
+Inc( "modules/sh_mountoffset.lua" )
 
 -- Custom extensions (add professions, entities, etc. without editing core)
 local customRoot = GM.FolderName .. "/gamemode/custom/"

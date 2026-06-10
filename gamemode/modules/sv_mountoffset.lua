@@ -68,6 +68,12 @@ function MO.SyncTo( ply )
 	net.Send( ply )
 end
 
+function MO.OpenMenuFor( ply )
+	if not AdminAllowed( ply ) then return end
+	net.Start( "SWGRP_MountOffsetMenu" )
+	net.Send( ply )
+end
+
 function MO.SetMain( ply, ent )
 	if not AdminAllowed( ply ) or not IsValid( ent ) then return false end
 
@@ -122,13 +128,8 @@ function MO.CaptureFromTrace( ply )
 	local worldPos = tr.HitPos
 	local localPos = main:WorldToLocal( worldPos )
 
-	local localAng
-	local ent = tr.Entity
-	if IsValid( ent ) and ent ~= main and not ent:IsPlayer() then
-		localAng = main:WorldToLocalAngles( ent:GetAngles() )
-	else
-		localAng = Angle( 0, 0, 0 )
-	end
+	local worldAng = MO.WorldAnglesOnSurface( tr.HitNormal )
+	local localAng = main:WorldToLocalAngles( worldAng )
 
 	local entry = {
 		pos = SerializeVec( localPos ),
@@ -137,6 +138,7 @@ function MO.CaptureFromTrace( ply )
 
 	table.insert( session.offsets, entry )
 
+	local ent = tr.Entity
 	local src = IsValid( ent ) and ent ~= main and not ent:IsPlayer() and ent:GetClass() or "world"
 	SWGRP.Notify( ply, string.format(
 		"Slot %d from %s — local pos (%.2f, %.2f, %.2f) ang (%.2f, %.2f, %.2f)",

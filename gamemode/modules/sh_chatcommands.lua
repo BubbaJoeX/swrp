@@ -388,9 +388,9 @@ SWGRP.RegisterChatCommand( "sign", {
 	description = "Set holo sign text",
 	execute = function( ply, args )
 		local tr = ply:GetEyeTrace()
-		if IsValid( tr.Entity ) and tr.Entity:GetClass() == "swgrp_holo_sign" and tr.Entity.SWGRP_Owner == ply then
-			tr.Entity:SetSignText( string.sub( table.concat( args, " " ), 1, 64 ) )
-			SWGRP.Notify( ply, "Sign updated." )
+		local ent = tr.Entity
+		if IsValid( ent ) and ent:GetClass() == "swgrp_holo_sign" and ent.SetSignMessage then
+			ent:SetSignMessage( ply, table.concat( args, " " ) )
 		end
 	end,
 })

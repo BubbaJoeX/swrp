@@ -36,8 +36,8 @@ SWGRP.ModelMap.Entities = {
 	swgrp_armor_station     = "models/props_combine/suit_charger001.mdl",
 	swgrp_galactic_atm      = "models/props_c17/consolebox05a.mdl",
 	swgrp_mission_terminal  = "models/props_c17/consolebox03a.mdl",
-	swgrp_tipjar            = "models/props_lab/jar01b.mdl",
-	swgrp_holo_sign         = "models/hunter/plates/plate1x1.mdl",
+	swgrp_tipjar            = "models/starwars/syphadias/props/sw_tor/bioware_ea/items/harvesting/scavenge/scavenge_barrel.mdl",
+	swgrp_holo_sign         = "models/squiddy/hologram_01.mdl",
 }
 
 function SWGRP.ModelMap.Resolve( modelPath, fallback )

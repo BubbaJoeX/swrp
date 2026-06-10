@@ -63,8 +63,13 @@ if SERVER then
 		"SWGRP_SecuritySync",
 		"SWGRP_CasinoOpenMenu",
 		"SWGRP_CasinoBet",
+		"SWGRP_TipJarOpenMenu",
+		"SWGRP_TipJarAction",
+		"SWGRP_HoloSignOpenMenu",
+		"SWGRP_HoloSignAction",
 		"SWGRP_MountOffsetSync",
 		"SWGRP_MountOffsetAction",
+		"SWGRP_MountOffsetMenu",
 	}
 
 	for _, name in ipairs( nets ) do
