@@ -33,6 +33,16 @@ net.Receive( "SWGRP_BuyVehicle", function( len, ply )
 	SWGRP.VehiclesMgr.Buy( ply, id )
 end )
 
+net.Receive( "SWGRP_BuyFood", function( len, ply )
+	local id = net.ReadUInt( 8 )
+	SWGRP.Economy.BuyFood( ply, id )
+end )
+
+net.Receive( "SWGRP_CraftSpice", function( len, ply )
+	local id = net.ReadUInt( 8 )
+	SWGRP.Economy.CraftSpice( ply, id )
+end )
+
 net.Receive( "SWGRP_AcceptMission", function( len, ply )
 	local id = net.ReadUInt( 8 )
 	SWGRP.MissionsMgr.Accept( ply, id )

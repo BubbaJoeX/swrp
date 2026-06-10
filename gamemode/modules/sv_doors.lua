@@ -133,17 +133,9 @@ function SWGRP.Doors.LoadFromDatabase()
 
 				SWGRP.Doors.ApplyOwnership( door, data, true )
 
-				if data.locked then
-					SWGRP.Doors.ForEachLinked( door, function( linked )
-						linked:Fire( "Close" )
-						linked:Fire( "Lock" )
-					end )
-				else
-					SWGRP.Doors.ForEachLinked( door, function( linked )
-						linked:Fire( "UnLock" )
-						linked:Fire( "Unlock" )
-					end )
-				end
+				SWGRP.Doors.ForEachLinked( door, function( linked )
+					SWGRP.Doors.RefreshEngineLock( linked, data.locked )
+				end )
 			end
 		end
 	end
@@ -424,6 +416,20 @@ function SWGRP.Doors.ClearOwnership( ent )
 	end )
 end
 
+-- Managed doors are never given a hard engine lock. The +USE path is handled
+-- internally by the engine and bypasses our access hook, so a Fire( "Lock" )
+-- would refuse the door for *everyone* - including the owner. Instead we keep
+-- the engine door unlocked and enforce access entirely through PlayerUse, which
+-- lets owners / co-owners / group members / government open a "locked" door
+-- while blocking everyone else. We only Close the door so it visually shuts when
+-- it is secured.
+function SWGRP.Doors.RefreshEngineLock( door, locked )
+	if not IsValid( door ) then return end
+	if locked then door:Fire( "Close" ) end
+	door:Fire( "UnLock" )
+	door:Fire( "Unlock" )
+end
+
 function SWGRP.Doors.SetLockState( ent, locked, ply )
 	local masterData = SWGRP.Doors.GetMasterData( ent )
 	if not masterData then return end
@@ -431,13 +437,7 @@ function SWGRP.Doors.SetLockState( ent, locked, ply )
 	SWGRP.Doors.ForEachLinked( ent, function( door )
 		local d = SWGRP.Doors.GetData( door ) or masterData
 		d.locked = locked
-		if locked then
-			door:Fire( "Close" )
-			door:Fire( "Lock" )
-		else
-			door:Fire( "UnLock" )
-			door:Fire( "Unlock" )
-		end
+		SWGRP.Doors.RefreshEngineLock( door, locked )
 		SWGRP.Doors.Sync( door )
 	end )
 
@@ -476,8 +476,7 @@ function SWGRP.Doors.Buy( ply, ent )
 	SWGRP.Doors.ApplyOwnership( master, data )
 
 	SWGRP.Doors.ForEachLinked( master, function( door )
-		door:Fire( "Close" )
-		door:Fire( "Lock" )
+		SWGRP.Doors.RefreshEngineLock( door, true )
 	end )
 
 	SWGRP.Doors.RecalcDoorCount( ply )
@@ -731,6 +730,10 @@ hook.Add( "PlayerUse", "SWGRP_DoorAccess", function( ply, ent )
 	if ent:isDoor() then
 		local d = SWGRP.Doors.GetMasterData( ent )
 		if d and d.locked and not SWGRP.Doors.CanAccess( ply, ent ) then
+			if ( ply.SWGRP_NextLockedFeedback or 0 ) <= CurTime() then
+				ply.SWGRP_NextLockedFeedback = CurTime() + 1
+				ent:EmitSound( "doors/default_locked.wav", 60, 100 )
+			end
 			return false
 		end
 		return

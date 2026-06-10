@@ -261,8 +261,7 @@ function SWGRP.Doors.AdminForceOwner( ent, target )
 		local data = SWGRP.Doors.MakeDataFromPlayer( target )
 		SWGRP.Doors.ApplyOwnership( master, data )
 		SWGRP.Doors.ForEachLinked( master, function( door )
-			door:Fire( "Close" )
-			door:Fire( "Lock" )
+			SWGRP.Doors.RefreshEngineLock( door, true )
 		end )
 		SWGRP.Doors.RecalcDoorCount( target )
 	else
@@ -342,8 +341,7 @@ function SWGRP.Doors.AdminSetGroup( ent, group )
 	}
 	SWGRP.Doors.ApplyOwnership( master, data, true )
 	SWGRP.Doors.ForEachLinked( master, function( door )
-		door:Fire( "Close" )
-		door:Fire( "Lock" )
+		SWGRP.Doors.RefreshEngineLock( door, true )
 	end )
 
 	if mapId then

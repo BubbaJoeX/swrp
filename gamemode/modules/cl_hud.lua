@@ -28,6 +28,22 @@ local function DrawTextShadow( text, font, x, y, col, ax, ay )
 	draw.SimpleText( text, font, x, y, col, ax, ay )
 end
 
+-- Labelled status bar (health/armor/hunger). frac is 0..1.
+local function DrawStatBar( x, y, w, h, frac, fillCol, label )
+	frac = math.Clamp( frac, 0, 1 )
+
+	surface.SetDrawColor( 0, 0, 0, 180 )
+	surface.DrawRect( x, y, w, h )
+
+	surface.SetDrawColor( fillCol.r, fillCol.g, fillCol.b, 220 )
+	surface.DrawRect( x + 1, y + 1, math.floor( ( w - 2 ) * frac ), h - 2 )
+
+	surface.SetDrawColor( SWGRP.Config.HUDColorPrimary.r, SWGRP.Config.HUDColorPrimary.g, SWGRP.Config.HUDColorPrimary.b, 120 )
+	surface.DrawOutlinedRect( x, y, w, h )
+
+	DrawTextShadow( label, "DermaDefault", x + 6, y + h / 2, Color( 255, 255, 255 ), TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER )
+end
+
 hook.Add( "HUDPaint", "SWGRP_MainHUD", function()
 	if SWGRP.UI and SWGRP.UI.IsTerminalOpen and SWGRP.UI.IsTerminalOpen() then return end
 
@@ -39,27 +55,47 @@ hook.Add( "HUDPaint", "SWGRP_MainHUD", function()
 	local secondary = SWGRP.Config.HUDColorSecondary
 
 	-- Bottom-left info panel
-	local pw, ph = 300, 130
+	local pw, ph = 300, 196
 	local px, py = 20, scrH - ph - 20
 	DrawBox( px, py, pw, ph, Color( 10, 15, 25 ), 200 )
 
-	DrawTextShadow( ply:SWGRP_GetJobName() .. " Lv." .. ply:SWGRP_GetProfLevel(), "DermaDefaultBold", px + 10, py + 8, primary, TEXT_ALIGN_LEFT )
-	DrawTextShadow( "Wallet: " .. SWGRP.FormatCredits( ply:SWGRP_GetCredits() ) .. "  Bank: " .. SWGRP.FormatCredits( ply:SWGRP_GetBank() ), "DermaDefault", px + 10, py + 26, secondary, TEXT_ALIGN_LEFT )
-	DrawTextShadow( "Salary: " .. SWGRP.FormatCredits( ply:SWGRP_GetSalary() ), "DermaDefault", px + 10, py + 42, secondary, TEXT_ALIGN_LEFT )
+	local barW, barH = pw - 20, 16
+	local cy = py + 8
+
+	DrawTextShadow( ply:SWGRP_GetJobName() .. " Lv." .. ply:SWGRP_GetProfLevel(), "DermaDefaultBold", px + 10, cy, primary, TEXT_ALIGN_LEFT )
+	cy = cy + 18
+	DrawTextShadow( "Wallet: " .. SWGRP.FormatCredits( ply:SWGRP_GetCredits() ) .. "  Bank: " .. SWGRP.FormatCredits( ply:SWGRP_GetBank() ), "DermaDefault", px + 10, cy, secondary, TEXT_ALIGN_LEFT )
+	cy = cy + 16
+	DrawTextShadow( "Salary: " .. SWGRP.FormatCredits( ply:SWGRP_GetSalary() ), "DermaDefault", px + 10, cy, secondary, TEXT_ALIGN_LEFT )
+	cy = cy + 20
+
+	-- Vitals: health and armor, above hunger.
+	local maxHealth = math.max( ply:GetMaxHealth(), 1 )
+	local health = math.max( ply:Health(), 0 )
+	DrawStatBar( px + 10, cy, barW, barH, health / maxHealth, Color( 200, 60, 60 ), "Health  " .. health .. " / " .. maxHealth )
+	cy = cy + barH + 4
+
+	local armor = math.Clamp( ply:Armor(), 0, 100 )
+	DrawStatBar( px + 10, cy, barW, barH, armor / 100, SWGRP.Config.HUDColorAccent, "Armor  " .. armor )
+	cy = cy + barH + 4
 
 	if SWGRP.Config.HungerEnabled and SWGRP.Config.HungerEnabled:GetBool() then
 		local hunger = ply:SWGRP_GetHunger()
-		local hCol = hunger < 20 and SWGRP.Config.HUDColorDanger or secondary
-		DrawTextShadow( "Hunger: " .. hunger .. "%", "DermaDefault", px + 10, py + 58, hCol, TEXT_ALIGN_LEFT )
+		local hungerMax = math.max( SWGRP.Config.HungerMax or 100, 1 )
+		local hCol = hunger < 20 and SWGRP.Config.HUDColorDanger or Color( 120, 180, 80 )
+		DrawStatBar( px + 10, cy, barW, barH, hunger / hungerMax, hCol, "Hunger  " .. hunger .. "%" )
+		cy = cy + barH + 4
 	end
 
 	local mission = ply:SWGRP_GetMissionName()
 	if mission ~= "" then
-		DrawTextShadow( "Mission: " .. mission, "DermaDefault", px + 10, py + 74, SWGRP.Config.HUDColorAccent, TEXT_ALIGN_LEFT )
+		DrawTextShadow( "Mission: " .. mission, "DermaDefault", px + 10, cy, SWGRP.Config.HUDColorAccent, TEXT_ALIGN_LEFT )
+		cy = cy + 16
 	end
 
 	if ply:SWGRP_GetContrabandCount() > 0 then
-		DrawTextShadow( "Contraband: " .. ply:SWGRP_GetContrabandCount(), "DermaDefault", px + 10, py + 90, SWGRP.Config.HUDColorDanger, TEXT_ALIGN_LEFT )
+		DrawTextShadow( "Contraband: " .. ply:SWGRP_GetContrabandCount(), "DermaDefault", px + 10, cy, SWGRP.Config.HUDColorDanger, TEXT_ALIGN_LEFT )
+		cy = cy + 16
 	end
 
 	local status = ""
@@ -75,7 +111,7 @@ hook.Add( "HUDPaint", "SWGRP_MainHUD", function()
 
 	if status ~= "" then
 		local col = ply:SWGRP_IsWanted() and SWGRP.Config.HUDColorDanger or SWGRP.Config.HUDColorAccent
-		DrawTextShadow( status, "DermaDefault", px + 10, py + 106, col, TEXT_ALIGN_LEFT )
+		DrawTextShadow( status, "DermaDefault", px + 10, cy, col, TEXT_ALIGN_LEFT )
 	end
 
 	-- Faction standing (compact, right of panel)

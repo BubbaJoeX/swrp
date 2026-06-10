@@ -6,14 +6,26 @@ ENT.PrintName = "Dropped Credits"
 ENT.Category = "SWGRP"
 ENT.Spawnable = false
 
+ENT.CreditModel   = "models/sw_galactic_credits/galactic_credit.mdl"
+ENT.FallbackModel = "models/props_lab/box01a.mdl"
+
 function ENT:SetupDataTables()
 	self:NetworkVar( "Int", 0, "Credits" )
 end
 
 if SERVER then
 	function ENT:Initialize()
-		self:SetModel( "models/props_lab/box01a.mdl" )
+		self:SetModel( self.CreditModel )
 		self:PhysicsInit( SOLID_VPHYSICS )
+
+		-- If the galactic credit model isn't mounted on this server the entity
+		-- has no physics mesh and would snap to the world origin; fall back to a
+		-- guaranteed HL2 prop so dropped money always lands where it was dropped.
+		if not IsValid( self:GetPhysicsObject() ) then
+			self:SetModel( self.FallbackModel )
+			self:PhysicsInit( SOLID_VPHYSICS )
+		end
+
 		self:SetMoveType( MOVETYPE_VPHYSICS )
 		self:SetSolid( SOLID_VPHYSICS )
 		self:SetUseType( SIMPLE_USE )

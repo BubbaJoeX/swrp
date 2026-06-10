@@ -13,7 +13,7 @@ end
 
 if SERVER then
 	function ENT:Initialize()
-		self:SetModel( "models/props_c17/paper01.mdl" )
+		self:SetModel( "models/swcw_items/sw_datapad.mdl" )
 		self:PhysicsInit( SOLID_VPHYSICS )
 		self:SetMoveType( MOVETYPE_VPHYSICS )
 		self:SetSolid( SOLID_VPHYSICS )

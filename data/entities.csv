@@ -1,14 +1,15 @@
 # class,name,model,price,max,cmd,allowed,category
 # allowed = comma-separated profession commands inside quotes, or * for everyone
 class,name,model,price,max,cmd,allowed,category
-swgrp_credit_harvester,Credit Harvester,models/props_c17/consolebox01a.mdl,1200,2,buyharvester,"smuggler,merchant,artisan",Structures & Commerce
-swgrp_ration_dispenser,Ration Dispenser,models/props_junk/garbage_metalcan001a.mdl,200,2,buyration,"cantina,merchant",Structures & Commerce
-swgrp_med_station,Medical Station,models/props_combine/suit_charger001.mdl,500,2,buymedstation,"medic,doctor",Structures & Commerce
-swgrp_ammo_crate,Ammo Resupply Crate,models/Items/ammocrate_smg1.mdl,350,2,buyammocrate,"armsdealer,commando",Structures & Commerce
-swgrp_armor_station,Armor Repair Station,models/props_combine/suit_charger001.mdl,400,1,buyarmor,"artisan,commando",Structures & Commerce
-swgrp_galactic_atm,Galactic ATM,models/props_c17/consolebox05a.mdl,300,2,buyatm,"merchant,governor,colonist",Structures & Commerce
-swgrp_mission_terminal,Mission Terminal,models/props_c17/consolebox03a.mdl,500,1,buymissionterm,"governor,merchant",Structures & Commerce
-swgrp_tipjar,Tip Jar,models/props_lab/jar01b.mdl,50,2,buytipjar,"entertainer,cantina",Structures & Commerce
-swgrp_holo_sign,Holo Sign,models/hunter/plates/plate1x1.mdl,75,4,buysign,*,Structures & Commerce
-swgrp_letter,Galactic Letter,models/props_c17/paper01.mdl,25,5,buyletter,*,Structures & Commerce
-swgrp_keypad,Security Keypad,models/props_lab/keypad.mdl,150,8,buykeypad,*,Structures & Commerce
+swgrp_credit_harvester,Credit Press,models/props/starwars/weapons/hoth_bomb.mdl,1200,2,buyharvester,*,Commerce
+swgrp_ration_dispenser,Ration Terminal,models/bananakin/rp_daedalus_v1/cantina_console.mdl,200,2,buyration,"cantina,merchant",Health & Services
+swgrp_med_station,Medical Station,models/props/starwars/medical/health_droid.mdl,500,2,buymedstation,"medic,doctor",Health & Services
+swgrp_ammo_crate,Energy Cell,models/starwars/items/energy_cell.mdl,350,2,buyammocrate,"armsdealer,commando",Health & Services
+swgrp_armor_station,Armor Kiosk,models/starwars/items/shield_large.mdl,400,1,buyarmor,"artisan,commando",Health & Services
+swgrp_galactic_atm,Galactic Bank,models/kingpommes/emperors_tower/ph_props/palp_panel1/palp_panel1.mdl,300,2,buyatm,"merchant,governor,colonist",Commerce
+swgrp_mission_terminal,Mission Terminal,models/lordtrilobite/starwars/isd/imp_console_small01.mdl,500,1,buymissionterm,"governor,merchant",Commerce
+swgrp_tipjar,Tip Jar,models/props_lab/jar01b.mdl,50,2,buytipjar,"entertainer,cantina",Commerce
+swgrp_holo_sign,Holo-Sign,models/hunter/plates/plate1x1.mdl,75,4,buysign,*,Misc
+swgrp_letter,Datapad,models/swcw_items/sw_datapad.mdl,25,5,buyletter,*,Misc
+swgrp_keypad,Security Keypad,models/props_lab/keypad.mdl,150,8,buykeypad,*,Misc
+swgrp_spice_terminal,Spice Storage Terminal,models/props/starwars/vehicles/bd_dispenser.mdl,650,2,buyspiceterm,*,Commerce

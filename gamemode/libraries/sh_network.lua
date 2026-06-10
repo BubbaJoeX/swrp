@@ -20,6 +20,8 @@ if SERVER then
 		"SWGRP_BuyAmmo",
 		"SWGRP_SetJob",
 		"SWGRP_BuyVehicle",
+		"SWGRP_BuyFood",
+		"SWGRP_CraftSpice",
 		"SWGRP_AcceptMission",
 		"SWGRP_CraftItem",
 		"SWGRP_BankAction",
@@ -30,6 +32,10 @@ if SERVER then
 		"SWGRP_Advert",
 		"SWGRP_PocketSync",
 		"SWGRP_PocketDrop",
+		"SWGRP_PocketStore",
+		"SWGRP_PocketSwap",
+		"SWGRP_PocketRequestSync",
+		"SWGRP_PocketQuickStore",
 		"SWGRP_PocketOpen",
 		"SWGRP_ReloadContent",
 		"SWGRP_DoorAction",
@@ -38,6 +44,12 @@ if SERVER then
 		"SWGRP_AdminButtonMenu",
 		"SWGRP_AdminButtonAction",
 		"SWGRP_DoorNoBuy",
+		"SWGRP_AdminMenu",
+		"SWGRP_AdminAction",
+		"SWGRP_AdminSync",
+		"SWGRP_JobSpawnMenu",
+		"SWGRP_JobSpawnAction",
+		"SWGRP_JobSpawnSync",
 	}
 
 	for _, name in ipairs( nets ) do

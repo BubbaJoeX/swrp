@@ -8,7 +8,7 @@ ENT.Spawnable = false
 
 if SERVER then
 	function ENT:Initialize()
-		self:SetModel( "models/props_c17/consolebox05a.mdl" )
+		self:SetModel( "models/kingpommes/emperors_tower/ph_props/palp_panel1/palp_panel1.mdl" )
 		self:PhysicsInit( SOLID_VPHYSICS )
 		self:SetMoveType( MOVETYPE_VPHYSICS )
 		self:SetSolid( SOLID_VPHYSICS )
@@ -24,6 +24,13 @@ if SERVER then
 end
 
 if CLIENT then
+	function ENT:Draw()
+		self:DrawModel()
+		if SWGRP.UI and SWGRP.UI.DrawWorldLabel then
+			SWGRP.UI.DrawWorldLabel( self, "GALACTIC ATM", "Press E to bank", SWGRP.UI.Colors.accent )
+		end
+	end
+
 	function SWGRP.OpenBankMenu()
 		if IsValid( SWGRP.BankFrame ) then SWGRP.BankFrame:Remove() end
 

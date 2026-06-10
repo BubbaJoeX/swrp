@@ -92,11 +92,21 @@ local function BuildShop( sheet, UI, frame )
 						local maxText = ( job.max and job.max > 0 ) and ( "Max slots: " .. job.max ) or "Unlimited slots"
 						local voteText = job.vote and "Requires colony vote" or "Open profession"
 
+						-- List the weapons this profession is issued on spawn so players
+						-- can see the loadout before assuming it. Prefer the SWEP's
+						-- PrintName, falling back to the raw class when unregistered.
+						local wepNames = {}
+						for _, wepClass in ipairs( job.weapons or {} ) do
+							local swep = weapons.Get( wepClass )
+							table.insert( wepNames, ( swep and swep.PrintName and swep.PrintName ~= "" ) and swep.PrintName or wepClass )
+						end
+						local wepText = #wepNames > 0 and ( "Issued weapons: " .. table.concat( wepNames, ", " ) ) or "Issued weapons: None"
+
 						catalog:AddItem( {
 							name = job.name,
 							subtitle = job.category or "General",
 							listSub = SWGRP.FormatCredits( job.salary ) .. " / payday",
-							description = ( job.description or "" ) .. "\n\nAllegiance: " .. faction.name .. "\n" .. maxText .. "\n" .. voteText,
+							description = ( job.description or "" ) .. "\n\nAllegiance: " .. faction.name .. "\n" .. maxText .. "\n" .. voteText .. "\n" .. wepText,
 							priceText = "Salary: " .. SWGRP.FormatCredits( job.salary ) .. " per payday",
 							model = SWGRP.GetJobPreviewModel( job ),
 							color = job.color or faction.color,
@@ -124,19 +134,19 @@ local function BuildShop( sheet, UI, frame )
 		end
 	end
 
-	-- Structures / entities (preview)
-	local entCatalog = UI.CreateCatalogTab( sheet, "Structures", "icon16/brick.png" )
+	-- Equipment / entities (preview)
+	local entCatalog = UI.CreateCatalogTab( sheet, "Equipment", "icon16/brick.png" )
 	for class, data in SortedPairsByMemberValue( SWGRP.Entities, "name" ) do
 		local maxText = data.max and ( "Max owned: " .. data.max ) or ""
 		entCatalog:AddItem( {
 			name = data.name,
-			subtitle = data.category or "Structures & Commerce",
+			subtitle = data.category or "Equipment",
 			listSub = SWGRP.FormatCredits( data.price ),
-			description = "Deployable structure for your colony.\n" .. maxText,
+			description = "An item for you, or your property. Can be pocketed.\n" .. maxText,
 			priceText = "Cost: " .. SWGRP.FormatCredits( data.price ),
 			model = SWGRP.GetEntityPreviewModel( class, data ),
 			color = UI.Colors.accent,
-			actionText = "Purchase Structure",
+			actionText = "Purchase Equipment",
 			onAction = function()
 				net.Start( "SWGRP_BuyEntity" )
 					net.WriteString( class )

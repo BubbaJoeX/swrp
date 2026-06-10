@@ -8,7 +8,7 @@ ENT.Spawnable = false
 
 if SERVER then
 	function ENT:Initialize()
-		self:SetModel( "models/props_c17/consolebox03a.mdl" )
+		self:SetModel( "models/lordtrilobite/starwars/isd/imp_console_small01.mdl" )
 		self:PhysicsInit( SOLID_VPHYSICS )
 		self:SetMoveType( MOVETYPE_VPHYSICS )
 		self:SetSolid( SOLID_VPHYSICS )

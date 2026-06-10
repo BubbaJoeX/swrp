@@ -9,15 +9,9 @@ function SWGRP.VehiclesMgr.Buy( ply, vehicleId )
 	local veh = SWGRP.Vehicles[vehicleId]
 	if not veh then return end
 
-	if veh.allowed then
-		local ok = false
-		for _, t in ipairs( veh.allowed ) do
-			if ply:Team() == t then ok = true break end
-		end
-		if not ok then
-			SWGRP.Notify( ply, "Your profession cannot purchase this vehicle." )
-			return
-		end
+	if not SWGRP.PlayerTeamAllowedPurchase( ply, veh.allowed ) then
+		SWGRP.Notify( ply, "Your profession cannot purchase this vehicle." )
+		return
 	end
 
 	if not ply:SWGRP_TakeCredits( veh.price ) then

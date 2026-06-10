@@ -43,7 +43,54 @@ UI.Colors = {
 -- True while any full-screen SWGRP terminal (F4 shop, F3 datapad, scoreboard)
 -- is open, so the HUD can stand down and avoid bleeding text through the menu.
 function UI.IsTerminalOpen()
-	return IsValid( SWGRP.F4Frame ) or IsValid( SWGRP.ServicesFrame ) or IsValid( SWGRP.Scoreboard )
+	return IsValid( SWGRP.F4Frame ) or IsValid( SWGRP.ServicesFrame ) or IsValid( SWGRP.Scoreboard ) or IsValid( SWGRP.Pocket and SWGRP.Pocket.Menu )
+end
+
+-- Floating billboard label drawn above a world entity so SWGRP service props
+-- (ATM, terminals, dispensers) stand out from ordinary map clutter. Call from
+-- an entity's clientside Draw. Yaws to face the viewer while staying upright,
+-- matching the 3D2D convention used by other SWGRP world entities, and fades
+-- out with distance so it isn't visible across the whole map.
+function UI.DrawWorldLabel( ent, title, subtitle, accent )
+	if not IsValid( ent ) then return end
+
+	local ply = LocalPlayer()
+	if not IsValid( ply ) then return end
+
+	local pos = ent:GetPos() + Vector( 0, 0, ent:OBBMaxs().z + 16 )
+
+	local dist = ply:EyePos():Distance( pos )
+	if dist > 800 then return end
+	local alpha = math.Clamp( ( 800 - dist ) / 250, 0, 1 ) * 255
+
+	accent = accent or UI.Colors.primary
+
+	local ang = ply:EyeAngles()
+	ang:RotateAroundAxis( ang:Forward(), 90 )
+	ang:RotateAroundAxis( ang:Right(), 90 )
+
+	surface.SetFont( "DermaLarge" )
+	local tw = surface.GetTextSize( title )
+	local sw = 0
+	local hasSub = subtitle ~= nil and subtitle ~= ""
+	if hasSub then
+		surface.SetFont( "DermaDefaultBold" )
+		sw = surface.GetTextSize( subtitle )
+	end
+
+	local boxW = math.max( tw, sw ) + 44
+	local boxH = hasSub and 60 or 42
+
+	cam.Start3D2D( pos, Angle( 0, ang.y, 90 ), 0.12 )
+		draw.RoundedBox( 8, -boxW / 2, -boxH / 2, boxW, boxH, Color( 10, 15, 25, alpha * 0.82 ) )
+		surface.SetDrawColor( accent.r, accent.g, accent.b, alpha )
+		surface.DrawOutlinedRect( -boxW / 2, -boxH / 2, boxW, boxH, 2 )
+
+		draw.SimpleText( title, "DermaLarge", 0, hasSub and -9 or 0, Color( accent.r, accent.g, accent.b, alpha ), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER )
+		if hasSub then
+			draw.SimpleText( subtitle, "DermaDefaultBold", 0, 16, Color( 220, 220, 220, alpha ), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER )
+		end
+	cam.End3D2D()
 end
 
 function UI.SyncColors()

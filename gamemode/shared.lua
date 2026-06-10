@@ -29,6 +29,7 @@ include( "modules/fadmin/sh_fadmin_darkrp.lua" )
 include( "libraries/sh_network.lua" )
 include( "libraries/sh_hooks.lua" )
 include( "libraries/sh_fadmin.lua" )
+include( "libraries/sh_admin.lua" )
 include( "language/sh_english.lua" )
 
 -- Content registration (shared)

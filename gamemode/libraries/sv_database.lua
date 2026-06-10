@@ -223,6 +223,8 @@ function SWGRP.DB.LoadPlayer( ply )
 		ply.SWGRP_Contraband = SWGRP.DB.ParseJSON( row.contraband )
 		ply.SWGRP_JobModels = SWGRP.DB.ParseJSON( row.job_models )
 		ply.SWGRP_Pocket = row.pocket or ""
+		ply.SWGRP_PocketSlots = nil
+		ply.SWGRP_PocketItems = nil
 		ply:SetNWString( "SWGRP_Pocket", ply.SWGRP_Pocket or "" )
 
 		SWGRP.Materials.SyncAll( ply )

@@ -146,7 +146,11 @@ C.DefaultWeapons = {
 	"gmod_tool",
 	"weapon_physgun",
 }
-C.AdminWeapons = {}
+C.AdminWeapons = {
+	"swgrp_admin_doortool",
+	"swgrp_admin_buttontool",
+	"swgrp_admin_jobspawntool",
+}
 C.AdminsCopWeapons = false
 
 GM.Config = GM.Config or {}

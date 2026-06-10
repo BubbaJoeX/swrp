@@ -9,6 +9,16 @@ function SWGRP.Banking.GetBalance( ply )
 	return ply.SWGRP_BankBalance or 0
 end
 
+-- Admin override: set a player's bank balance outright (clamped to the cap).
+function SWGRP.Banking.SetBalance( ply, amount )
+	if not IsValid( ply ) then return false end
+	amount = math.Clamp( math.floor( amount or 0 ), 0, SWGRP.Config.MaxBankBalance )
+	ply.SWGRP_BankBalance = amount
+	ply:SetNWInt( "SWGRP_Bank", amount )
+	SWGRP.Persistence.ScheduleSave( ply )
+	return true
+end
+
 function SWGRP.Banking.Deposit( ply, amount )
 	amount = math.floor( amount )
 	if amount <= 0 then return false end

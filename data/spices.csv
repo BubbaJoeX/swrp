@@ -1,0 +1,6 @@
+name,model,price,hunger_change,health_change,allowed,category
+Deathsticks,models/drugs/deathstick.mdl,100,-10,-10,*,Drugs
+Kashyyykian Fungi,models/drugs/redmushroom.mdl,100,-5,20,*,Drugs
+Grey Gabaki,models/sw_mandalorian_spice/mandalorian_spice_white.mdl,100,-40,20,*,Spice
+Muon Gold,models/sw_mandalorian_spice/mandalorian_spice_yellow.mdl,100,-40,25,*,Spice
+Nightsister Shade,models/sw_mandalorian_spice/mandalorian_spice_red.mdl,100,-40,25,*,Spice

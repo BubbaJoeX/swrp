@@ -8,11 +8,14 @@ SWGRP.Jobs        = SWGRP.Jobs or {}
 SWGRP.Categories  = SWGRP.Categories or {}
 SWGRP.Entities    = SWGRP.Entities or {}
 SWGRP.Shipments   = SWGRP.Shipments or {}
+SWGRP.Foods       = SWGRP.Foods or {}
+SWGRP.Spices      = SWGRP.Spices or {}
 SWGRP.AmmoTypes   = SWGRP.AmmoTypes or {}
 SWGRP.ChatCmds    = SWGRP.ChatCmds or {}
 SWGRP.DoorGroups  = SWGRP.DoorGroups or {}
 SWGRP.Laws        = SWGRP.Laws or {}
 SWGRP.JailPositions = SWGRP.JailPositions or {}
+SWGRP.JobSpawns  = SWGRP.JobSpawns or {}
 SWGRP.HitContracts = SWGRP.HitContracts or {}
 SWGRP.Recipes      = SWGRP.Recipes or {}
 SWGRP.Missions      = SWGRP.Missions or {}
@@ -63,6 +66,16 @@ function SWGRP.RegisterShipment( name, data )
 	table.insert( SWGRP.Shipments, data )
 end
 
+function SWGRP.RegisterFood( name, data )
+	data.name = name
+	table.insert( SWGRP.Foods, data )
+end
+
+function SWGRP.RegisterSpice( name, data )
+	data.name = name
+	table.insert( SWGRP.Spices, data )
+end
+
 function SWGRP.RegisterAmmoType( name, data )
 	data.name = name
 	SWGRP.AmmoTypes[name] = data
@@ -103,6 +116,58 @@ function SWGRP.GetJobByCommand( cmd )
 			return job, id
 		end
 	end
+end
+
+-- True if the player's *current* profession command is in the allow list (a
+-- lowercased command array, or nil/empty for unrestricted). Matching by command
+-- text rather than a pre-resolved team id keeps access checks correct even if
+-- numeric team ids shift across content reloads or Lua refreshes.
+function SWGRP.PlayerJobAllowed( ply, allowedCmds )
+	if not allowedCmds or #allowedCmds == 0 then return true end
+	if not IsValid( ply ) then return false end
+
+	local job = SWGRP.GetJob( ply:Team() )
+	local myCmd = job and string.lower( job.command or "" ) or ""
+	if myCmd == "" then return false end
+
+	for _, c in ipairs( allowedCmds ) do
+		if string.lower( c ) == myCmd then return true end
+	end
+	return false
+end
+
+-- Purchase gate: superadmins bypass profession command restrictions and are told
+-- when a check would otherwise have blocked them.
+function SWGRP.PlayerJobAllowedPurchase( ply, allowedCmds )
+	if IsValid( ply ) and ply:IsSuperAdmin() then
+		if allowedCmds and #allowedCmds > 0 and not SWGRP.PlayerJobAllowed( ply, allowedCmds ) then
+			if SERVER and SWGRP.Notify then
+				SWGRP.Notify( ply, "Superadmin override: ignoring profession restriction." )
+			end
+		end
+		return true
+	end
+
+	return SWGRP.PlayerJobAllowed( ply, allowedCmds )
+end
+
+-- Same bypass for catalog rows that still store resolved team ids (ammo, vehicles).
+function SWGRP.PlayerTeamAllowedPurchase( ply, allowedTeams )
+	if not allowedTeams or #allowedTeams == 0 then return true end
+	if not IsValid( ply ) then return false end
+
+	for _, t in ipairs( allowedTeams ) do
+		if ply:Team() == t then return true end
+	end
+
+	if ply:IsSuperAdmin() then
+		if SERVER and SWGRP.Notify then
+			SWGRP.Notify( ply, "Superadmin override: ignoring profession restriction." )
+		end
+		return true
+	end
+
+	return false
 end
 
 function SWGRP.JobCount( teamId )

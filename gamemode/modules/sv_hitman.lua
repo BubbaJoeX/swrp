@@ -52,6 +52,30 @@ function SWGRP.Hitman.CompleteContract( hunter, target )
 	SWGRP.Hitman.Sync()
 end
 
+-- Admin override: cancel a single contract (no payout) and resync clients.
+function SWGRP.Hitman.ClearContract( target )
+	local sid = isstring( target ) and target or ( IsValid( target ) and target:SteamID() )
+	if not sid or not SWGRP.HitContracts[sid] then return false end
+
+	SWGRP.HitContracts[sid] = nil
+	if SWGRP.Persistence and SWGRP.Persistence.DeleteBounty then
+		SWGRP.Persistence.DeleteBounty( sid )
+	end
+	SWGRP.Hitman.Sync()
+	return true
+end
+
+-- Admin override: wipe every active bounty contract.
+function SWGRP.Hitman.ClearAll()
+	for sid in pairs( SWGRP.HitContracts ) do
+		if SWGRP.Persistence and SWGRP.Persistence.DeleteBounty then
+			SWGRP.Persistence.DeleteBounty( sid )
+		end
+	end
+	SWGRP.HitContracts = {}
+	SWGRP.Hitman.Sync()
+end
+
 function SWGRP.Hitman.Sync( ply )
 	local count = 0
 	for _ in pairs( SWGRP.HitContracts ) do count = count + 1 end

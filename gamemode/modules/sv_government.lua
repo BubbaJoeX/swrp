@@ -75,6 +75,26 @@ function SWGRP.Government.StartLockdown( ply )
 	end )
 end
 
+-- Admin override: force lockdown on/off without holding the Governor office.
+function SWGRP.Government.AdminSetLockdown( state )
+	if state then
+		if SWGRP.Government.Lockdown then return end
+		SWGRP.Government.Lockdown = true
+		SWGRP.Government.LockdownEnd = CurTime() + SWGRP.Config.LockdownTime
+
+		for _, p in ipairs( player.GetAll() ) do
+			p:ChatPrint( SWGRP.Lang.lockdown_start )
+		end
+		SWGRP.Government.SyncLockdown()
+
+		timer.Create( "SWGRP_LockdownEnd", SWGRP.Config.LockdownTime, 1, function()
+			SWGRP.Government.EndLockdown()
+		end )
+	else
+		SWGRP.Government.EndLockdown()
+	end
+end
+
 function SWGRP.Government.EndLockdown()
 	if not SWGRP.Government.Lockdown then return end
 	SWGRP.Government.Lockdown = false

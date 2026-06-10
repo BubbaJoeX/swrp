@@ -28,6 +28,7 @@ AddCSLuaFiles( "language" )
 AddCSLuaFiles( "vgui" )
 
 include( "shared.lua" )
+include( "libraries/sv_entity_loader.lua" )
 
 include( "libraries/mysqlite/mysqlite.lua" )
 include( "libraries/sv_fadmin_compat.lua" )
@@ -51,6 +52,7 @@ include( "modules/sv_jobs.lua" )
 include( "modules/sv_demote.lua" )
 include( "modules/sv_afk.lua" )
 include( "modules/sv_spawn.lua" )
+include( "modules/sv_jobspawns.lua" )
 include( "modules/sv_props.lua" )
 include( "modules/sv_spawnmenu.lua" )
 include( "modules/sv_medic.lua" )
@@ -70,6 +72,7 @@ include( "modules/sv_voteban.lua" )
 include( "modules/sv_advert.lua" )
 include( "modules/sv_nlr.lua" )
 include( "modules/sv_whitelist.lua" )
+include( "modules/sv_admin.lua" )
 include( "modules/sv_net.lua" )
 
 -- SWGRP stores everything in SQLite; disable MySQL so FAdmin's bundled MySQLite

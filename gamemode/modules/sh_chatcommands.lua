@@ -444,14 +444,14 @@ SWGRP.RegisterChatCommand( "sellalldoors", {
 })
 
 SWGRP.RegisterChatCommand( "pocket", {
-	description = "Store active weapon in pocket",
+	description = "Pocket aimed equipment or your active weapon (Alt+R quick-pocket)",
 	execute = function( ply, args )
 		SWGRP.Pocket.Store( ply )
 	end,
 })
 
 SWGRP.RegisterChatCommand( "droppocket", {
-	description = "Retrieve an item from your pocket",
+	description = "Open the pocket inventory",
 	execute = function( ply, args )
 		if SWGRP.Pocket.RequestDrop then
 			SWGRP.Pocket.RequestDrop( ply )

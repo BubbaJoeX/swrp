@@ -16,6 +16,7 @@ C.Stats = {
 	jobs = 0,
 	entities = 0,
 	shipments = 0,
+	foods = 0,
 	ammo = 0,
 	vehicles = 0,
 }
@@ -83,6 +84,24 @@ function C.ToColor( str )
 	local r, g, b = string.match( str, "(%d+)[%s,]+(%d+)[%s,]+(%d+)" )
 	if not r then return Color( 255, 255, 255 ) end
 	return Color( tonumber( r ), tonumber( g ), tonumber( b ) )
+end
+
+-- Lowercased list of profession *commands* from an allow string, or nil for an
+-- unrestricted ("" / "*") field. Unlike ResolveTeams this keeps the raw command
+-- text so runtime checks don't depend on numeric team ids staying stable across
+-- content reloads / Lua refreshes.
+function C.AllowedCommands( str )
+	str = C.Trim( str )
+	if str == "" or str == "*" then return nil end
+
+	local out = {}
+	for c in string.gmatch( str, "[^,]+" ) do
+		c = string.lower( C.Trim( c ) )
+		if c ~= "" then table.insert( out, c ) end
+	end
+
+	if #out == 0 then return nil end
+	return out
 end
 
 function C.ResolveTeams( str )
@@ -272,6 +291,7 @@ function C.LoadEntities()
 			max = C.ToInt( C.Get( row, "max" ), 0 ),
 			cmd = C.Get( row, "cmd", "command" ),
 			allowed = C.ResolveTeams( C.Get( row, "allowed" ) ),
+			allowedcmds = C.AllowedCommands( C.Get( row, "allowed" ) ),
 			category = C.Get( row, "category" ) ~= "" and C.Get( row, "category" ) or "Structures & Commerce",
 		} )
 		C.Stats.entities = C.Stats.entities + 1
@@ -294,10 +314,47 @@ function C.LoadShipments()
 			separate = C.ToBool( C.Get( row, "separate", "allow_separate" ) ),
 			pricesep = C.ToInt( C.Get( row, "price_separate", "pricesep" ), 0 ),
 			allowed = C.ResolveTeams( C.Get( row, "allowed" ) ),
+			allowedcmds = C.AllowedCommands( C.Get( row, "allowed" ) ),
 			category = C.Get( row, "category" ) ~= "" and C.Get( row, "category" ) or "Shipments",
 		} )
 		C.Stats.shipments = C.Stats.shipments + 1
 			end
+		end
+	end
+end
+
+function C.LoadFoods()
+	for _, row in ipairs( C.ReadRows( "foods.csv" ) ) do
+		local name = C.Get( row, "name" )
+		if name ~= "" then
+		SWGRP.RegisterFood( name, {
+			model = C.Get( row, "model" ),
+			price = C.ToInt( C.Get( row, "price" ), 0 ),
+			hunger = C.ToInt( C.Get( row, "hunger" ), 0 ),
+			health = C.ToInt( C.Get( row, "health" ), 0 ),
+			allowed = C.ResolveTeams( C.Get( row, "allowed" ) ),
+			allowedcmds = C.AllowedCommands( C.Get( row, "allowed" ) ),
+			category = C.Get( row, "category" ) ~= "" and C.Get( row, "category" ) or "Rations",
+		} )
+		C.Stats.foods = C.Stats.foods + 1
+		end
+	end
+end
+
+function C.LoadSpices()
+	for _, row in ipairs( C.ReadRows( "spices.csv" ) ) do
+		local name = C.Get( row, "name" )
+		if name ~= "" then
+		SWGRP.RegisterSpice( name, {
+			model = C.Get( row, "model" ),
+			price = C.ToInt( C.Get( row, "price" ), 0 ),
+			hunger = C.ToInt( C.Get( row, "hunger_change", "hunger" ), 0 ),
+			health = C.ToInt( C.Get( row, "health_change", "health" ), 0 ),
+			allowed = C.ResolveTeams( C.Get( row, "allowed" ) ),
+			allowedcmds = C.AllowedCommands( C.Get( row, "allowed" ) ),
+			category = C.Get( row, "category" ) ~= "" and C.Get( row, "category" ) or "Spice",
+		} )
+		C.Stats.spices = C.Stats.spices + 1
 		end
 	end
 end
@@ -338,18 +395,20 @@ function C.LoadVehicles()
 end
 
 function C.LoadAll()
-	C.Stats = { jobs = 0, entities = 0, shipments = 0, ammo = 0, vehicles = 0 }
+	C.Stats = { jobs = 0, entities = 0, shipments = 0, foods = 0, spices = 0, ammo = 0, vehicles = 0 }
 
 	C.LoadJobs()
 	C.LoadEntities()
 	C.LoadShipments()
+	C.LoadFoods()
+	C.LoadSpices()
 	C.LoadAmmo()
 	C.LoadVehicles()
 
 	local s = C.Stats
 	MsgC( Color( 255, 180, 50 ), string.format(
-		"[SWGRP] CSV content loaded: %d jobs, %d entities, %d shipments, %d ammo, %d vehicles\n",
-		s.jobs, s.entities, s.shipments, s.ammo, s.vehicles
+		"[SWGRP] CSV content loaded: %d jobs, %d entities, %d shipments, %d foods, %d spices, %d ammo, %d vehicles\n",
+		s.jobs, s.entities, s.shipments, s.foods, s.spices, s.ammo, s.vehicles
 	) )
 end
 
@@ -360,10 +419,23 @@ function C.Reload()
 	-- Empty in place so any cached references remain valid.
 	table.Empty( SWGRP.Entities )
 	table.Empty( SWGRP.Shipments )
+	table.Empty( SWGRP.Foods )
+	table.Empty( SWGRP.Spices )
 	table.Empty( SWGRP.AmmoTypes )
 	table.Empty( SWGRP.Vehicles )
 
 	C.LoadAll()
+
+	-- Re-register entity .lua scripts so newly added types (e.g. spice terminal)
+	-- work after a CSV reload without restarting the map.
+	if SERVER and SWGRP.EntityLoader and SWGRP.EntityLoader.LoadAll then
+		local n = SWGRP.EntityLoader.LoadAll()
+		MsgC( Color( 255, 180, 50 ), string.format( "[SWGRP] Reloaded %d entity scripts.\n", n ) )
+	end
+
+	if SERVER and SWGRP.JobSpawns and SWGRP.JobSpawns.ApplyAll then
+		SWGRP.JobSpawns.ApplyAll()
+	end
 end
 
 if SERVER then

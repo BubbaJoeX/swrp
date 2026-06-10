@@ -108,6 +108,32 @@ function SWGRP.Police.Arrest( target, actor, time )
 	end )
 end
 
+-- Admin override: detain a player regardless of the actor's profession. Mirrors
+-- Arrest() but skips the CanEnforce gate (the caller is already an admin).
+function SWGRP.Police.AdminArrest( target, time )
+	if not IsValid( target ) then return end
+	if target:SWGRP_IsArrested() then return end
+
+	time = time or SWGRP.Config.ArrestTime
+	target:SWGRP_SetArrested( true )
+	target.SWGRP_ArrestExpire = os.time() + time
+	target:SWGRP_UnWanted()
+	target:StripWeapons()
+
+	local pos, ang = SWGRP.Police.GetJailPos()
+	target:SetPos( pos )
+	target:SetEyeAngles( ang )
+
+	for _, p in ipairs( player.GetAll() ) do
+		p:ChatPrint( string.format( SWGRP.Lang.arrested, target:Nick() ) )
+	end
+	SWGRP.Hooks.Call( "SWGRPPlayerArrested", target, nil )
+
+	timer.Create( "SWGRP_Arrest_" .. target:SteamID64(), time, 1, function()
+		if IsValid( target ) then SWGRP.Police.UnArrest( target ) end
+	end )
+end
+
 function SWGRP.Police.UnArrest( target, actor )
 	if not IsValid( target ) then return end
 	if actor and not SWGRP.Police.CanEnforce( actor ) then return end
