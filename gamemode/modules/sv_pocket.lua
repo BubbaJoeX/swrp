@@ -168,7 +168,7 @@ function SWGRP.Pocket.IsPocketableClass( ent )
 	local class = ent:GetClass()
 	if SWGRP.Pocket.IsVehicleEntity( ent ) then return true end
 	if string.sub( class, 1, 6 ) ~= "swgrp_" then return false end
-	return class ~= "swgrp_dropped_credits"
+	return class ~= "swgrp_dropped_credits" and class ~= "swgrp_hovercrate"
 end
 
 function SWGRP.Pocket.ResolveTarget( ent )
@@ -245,7 +245,7 @@ function SWGRP.Pocket.CanPocketEntity( ply, ent )
 
 	local class = ent:GetClass()
 	if string.sub( class, 1, 6 ) ~= "swgrp_" then return false end
-	if class == "swgrp_dropped_credits" then return false end
+	if class == "swgrp_dropped_credits" or class == "swgrp_hovercrate" then return false end
 
 	if SWGRP.Ownership and SWGRP.Ownership.CanTouch then
 		return SWGRP.Ownership.CanTouch( ply, ent )

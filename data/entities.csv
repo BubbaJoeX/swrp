@@ -18,3 +18,4 @@ swgrp_casino_machine_s02,Gambling RX Unit,models/kingpommes/emperors_tower/ph_pr
 swgrp_credit_press_case,Credit Press Case,models/starwars/syphadias/props/sw_tor/bioware_ea/props/city/city_market_stand_01.mdl,400,2,buypresscase,*,Black Market
 swgrp_vehicle_license,Vehicle License,models/lordtrilobite/starwars/props/imp_datatape.mdl,150,1,buyvehlicense,"governor,officer,stormtroopercaptain",Licensure
 swgrp_weapon_license,Weapon License,models/lordtrilobite/starwars/props/imp_datatape.mdl,150,1,buyweaponlicense,"governor,officer,stormtroopercaptain,armsdealer",Licensure
+swgrp_hovercrate,Repulsor Hovercrate,models/kingpommes/emperors_tower/imp_crates/imp_crate_single_base_static.mdl,450,2,buyhovercrate,*,Commerce
