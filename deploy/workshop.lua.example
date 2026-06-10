@@ -1,0 +1,28 @@
+--[[---------------------------------------------------------------------------
+    Galaxies RP — Workshop content (client download list)
+
+    Copy this file to:
+      garrysmod/lua/autorun/server/workshop.lua
+
+    Replace each placeholder with the numeric ID from the addon URL:
+      https://steamcommunity.com/sharedfiles/filedetails/?id=1234567890
+                                                      ^^^^^^^^^^
+
+    List every addon in your Steam Workshop collection — one ID per line.
+    Do NOT put the collection ID here; use individual addon IDs.
+
+    SWGRP itself is NOT a Workshop item. Deploy the gamemode via git:
+      garrysmod/gamemodes/swgrp/
+---------------------------------------------------------------------------]]
+
+-- Maps
+-- resource.AddWorkshop( "000000000" ) -- rp_your_starwars_map
+
+-- Player models / props / weapons (examples — replace with your collection)
+-- resource.AddWorkshop( "000000000" ) -- Star Wars model pack
+-- resource.AddWorkshop( "000000000" ) -- SW weapons (e.g. E-11)
+-- resource.AddWorkshop( "000000000" ) -- Food / spice props
+
+-- Server startup also needs (in server.cfg or launch line):
+--   host_workshop_collection YOUR_COLLECTION_ID
+--   -authkey YOUR_STEAM_WEB_API_KEY

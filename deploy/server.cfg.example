@@ -25,4 +25,8 @@ sv_loadingurl "asset://garrysmod/html/swgrp/loadscreen.html"
 maxplayers 32
 sv_lan 0
 
-// Workshop / FastDL content goes here
+// Workshop / FastDL content
+//   1. Create a Steam Workshop collection (content only — NOT the swgrp gamemode)
+//   2. Set host_workshop_collection below (requires -authkey on launch)
+//   3. Copy deploy/workshop.lua.example → garrysmod/lua/autorun/server/workshop.lua
+// host_workshop_collection 1234567890

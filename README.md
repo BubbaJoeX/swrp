@@ -1,30 +1,47 @@
-# Star Wars Galaxies Roleplay (SWGRP)
+# Galaxies RP (SWGRP)
 
-A DarkRP-inspired Garry's Mod gamemode themed after **Star Wars Galaxies**. Built on Sandbox with a modular Lua architecture, SQLite persistence, bundled **FAdmin** administration, **CSV-driven content** (jobs, entities, shipments, ammo, vehicles), and a `custom/` extension folder (similar to DarkRP's modification addon pattern).
+**Galaxies RP** — a DarkRP-inspired Garry's Mod gamemode themed after **Star Wars Galaxies**. Built on Sandbox with a modular Lua architecture, SQLite persistence, bundled **FAdmin** administration, **CSV-driven content** (jobs, entities, shipments, foods, spices, ammo, vehicles), and a `custom/` extension folder (similar to DarkRP's modification addon pattern).
 
-> **New to SWGRP?** This README is the reference overview. For step-by-step installation, content authoring, gameplay walkthroughs, admin tools, and troubleshooting, see **[GUIDE.md](GUIDE.md)**.
+> **New to SWGRP?** This README is the reference overview. For step-by-step installation, dedicated-server deployment, content authoring, gameplay walkthroughs, admin tools, and troubleshooting, see **[GUIDE.md](GUIDE.md)**.
 
 ## Quick Start
 
 1. Place the `swgrp` folder in `garrysmod/gamemodes/`
 2. Launch GMod → **Create Multiplayer Game** (or start a dedicated server)
-3. Select gamemode **Star Wars Galaxies RP**
+3. Select gamemode **Galaxies RP**
 4. Configure server ConVars in the gamemode settings panel or via console
 5. (Optional) Edit `swgrp/data/*.csv` to add your own jobs, structures, shipments, ammo, and vehicles — no Lua required
 
 > ⚠️ If the server boots into **Sandbox** instead of SWGRP, a Lua error occurred during load. Launch with `-condebug` and check `garrysmod/console.log` for the first red error. See [GUIDE.md → Troubleshooting](GUIDE.md#troubleshooting).
 
+## Dedicated Server (summary)
+
+| Component | How to deploy |
+|-----------|----------------|
+| **Gamemode (code + CSVs)** | Git clone into `garrysmod/gamemodes/swgrp/` — **not** Workshop |
+| **Content (models, maps, SWEPs)** | Steam Workshop **collection** + `resource.AddWorkshop()` per addon |
+| **Loading screen** | `deploy/install_loadscreen.ps1` + `sv_loadingurl` (see `deploy/server.cfg.example`) |
+
+Full walkthrough: **[GUIDE.md → Dedicated Server Deployment](GUIDE.md#dedicated-server-deployment)**.
+
 ## Architecture
 
 ```
 swgrp/
-├── swgrp.txt                 # Gamemode manifest & ConVars
+├── swgrp.txt                 # Gamemode manifest, ConVars & loadscreen URL
 ├── README.md                 # This file (reference overview)
 ├── GUIDE.md                  # Full setup / content / gameplay / admin guide
+├── loadscreen/               # Galaxies RP loading screen (HTML)
+├── deploy/                   # Dedicated-server helpers
+│   ├── server.cfg.example    # Example hostname, gamemode, loading URL
+│   ├── workshop.lua.example  # resource.AddWorkshop() template
+│   └── install_loadscreen.ps1
 ├── data/                     # CSV content (master copies)
 │   ├── jobs.csv              # Professions
-│   ├── entities.csv          # Purchasable structures
+│   ├── entities.csv          # Purchasable structures / equipment
 │   ├── shipments.csv         # Weapon crates
+│   ├── foods.csv             # Ration terminal items
+│   ├── spices.csv            # Spice terminal craftables
 │   ├── ammo.csv              # Ammunition types
 │   └── vehicles.csv          # Purchasable vehicles
 ├── gamemode/
@@ -85,6 +102,8 @@ Most content is defined in plain CSV files under `swgrp/data/` and loaded at sta
 | `jobs.csv` | Professions | `name, command, category, allegiance, color, models, description, weapons, salary, max, admin, vote, flags` |
 | `entities.csv` | Purchasable structures | `class, name, model, price, max, cmd, allowed, category` |
 | `shipments.csv` | Weapon crates | `name, model, preview_model, entities, price, amount, separate, price_separate, allowed, category` |
+| `foods.csv` | Ration terminal consumables | `name, model, price, hunger, health, allowed, category` |
+| `spices.csv` | Spice terminal craftables | `name, model, price, hunger, health, allowed, category` |
 | `ammo.csv` | Ammunition | `name, ammo_type, model, price, amount, allowed, category` |
 | `vehicles.csv` | Vehicles | `name, model, class, script, price, allowed, category` |
 
@@ -157,6 +176,7 @@ SWGRP.RegisterJob("Example", {
 - Door groups for Imperial/Cantina/Medical zones
 - **Security Bypass** lockpick SWEP
 - **Battering Ram** for warranted breaches
+- **Entity ownership** — purchased structures are owned; only the owner (or admins) may physgun, grav gun, tool, or pocket them
 
 ### Government
 - **Planetary Governor** — laws, lockdown, agenda, lottery, broadcast
@@ -254,6 +274,14 @@ SWGRP.RegisterJob("Example", {
 | `/craft [recipe]` | Craft item |
 | `/scan` | Imperial contraband scan |
 | `/contraband` | View contraband |
+| `/pocket` | Store aimed equipment or active weapon |
+| `/droppocket` | Open pocket menu |
+
+### Pocket
+- **8-slot** inventory for weapons and SWGRP entities (shipments, spice, keypads, etc.)
+- **T** — toggle pocket menu · **Alt+T** — quick-store what you're aiming at
+- Drag-and-drop between slots; double-click a slot to drop
+- Full item state preserved (weapon ammo, shipment contents, harvester credits, etc.)
 
 ### UI
 | Key | Panel |
@@ -263,6 +291,8 @@ SWGRP.RegisterJob("Example", {
 | F3 | Colony Datapad — missions, crafting, status, banking, governance, bounties |
 | F4 | Galactic Profession Terminal — professions, structures, vehicles, shipments, ammo |
 | TAB | Galactic Census scoreboard |
+| T | Pocket inventory |
+| Alt+T | Quick-pocket |
 
 ### Other
 - **AFK detection** with government auto-demote
@@ -346,6 +376,8 @@ Available hooks: `SWGRPCanChangeJob`, `SWGRPJobChanged`, `SWGRPPlayerPaid`, `SWG
 | `swgrp_holo_sign` | Customizable RP sign |
 | `swgrp_keypad` | Security keypad linked to a door |
 | `swgrp_letter` | Galactic letter / mail entity |
+| `swgrp_spice` | Crafted spice pickup |
+| `swgrp_spice_terminal` | Spice storage / crafting terminal |
 
 ## Weapons
 
@@ -360,12 +392,15 @@ Available hooks: `SWGRPCanChangeJob`, `SWGRPJobChanged`, `SWGRPPlayerPaid`, `SWG
 | `swgrp_zip_tie` | Restrain a target (underworld) |
 | `swgrp_disguise` | Conceal identity (smuggler) |
 | `swgrp_keypad_cracker` | Crack security keypads (underworld) |
+| `swgrp_admin_doortool` | Admin door configuration (admin only) |
+| `swgrp_admin_buttontool` | Admin map button ownership (admin only) |
+| `swgrp_admin_jobspawntool` | Admin per-job spawn points (admin only) |
 
 ## Not Yet Implemented (vs full DarkRP)
 
 - ULX/ULib command bridge (SWGRP ships **FAdmin** instead)
-- Full CPPI/FPP parity (basic prop ownership/limits only)
-- In-world door map entity configuration tool (jail/spawn set via `custom/` Lua)
+- Full CPPI/FPP parity (basic prop/entity ownership and limits only)
+- Automated Workshop collection sync (maintain `workshop.lua` manually)
 
 ## Credits
 
