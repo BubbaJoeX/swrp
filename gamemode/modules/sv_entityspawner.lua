@@ -131,20 +131,28 @@ function ES.SpawnAt( ply, kind, id )
 	elseif kind == "vehicle" then
 		local veh = SWGRP.Vehicles[tonumber( id )]
 		if not veh then return end
-		ent = ents.Create( veh.class )
-		if not IsValid( ent ) then return end
-		ent:SetModel( veh.model )
-		if veh.script then ent:SetKeyValue( "vehiclescript", veh.script ) end
-		ent:SetPos( pos + Vector( 0, 0, 20 ) )
-		ent:SetAngles( ang )
-		ent:Spawn()
-		ent:Activate()
+
+		if SWGRP.VehiclesMgr and SWGRP.VehiclesMgr.Spawn then
+			ent = SWGRP.VehiclesMgr.Spawn( ply, veh, pos + Vector( 0, 0, 20 ), ang )
+		else
+			ent = ents.Create( veh.class )
+			if not IsValid( ent ) then return end
+			ent:SetModel( veh.model )
+			if veh.script then ent:SetKeyValue( "vehiclescript", veh.script ) end
+			ent:SetPos( pos + Vector( 0, 0, 20 ) )
+			ent:SetAngles( ang )
+			ent:Spawn()
+			ent:Activate()
+			if SWGRP.VehiclesMgr and SWGRP.VehiclesMgr.InitializeOwnedVehicle then
+				SWGRP.VehiclesMgr.InitializeOwnedVehicle( ent, ply, veh )
+			end
+		end
 	else
 		SWGRP.Notify( ply, "Unknown spawn type." )
 		return
 	end
 
-	if IsValid( ent ) and SWGRP.Ownership then
+	if IsValid( ent ) and kind ~= "vehicle" and SWGRP.Ownership then
 		SWGRP.Ownership.SetOwner( ent, ply )
 	end
 

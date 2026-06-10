@@ -444,15 +444,41 @@ SWGRP.RegisterChatCommand( "sellalldoors", {
 })
 
 SWGRP.RegisterChatCommand( "pocket", {
-	description = "Pocket aimed equipment or your active weapon (Alt+T quick-pocket)",
+	description = "Store aimed equipment or active weapon (use /pocketmenu to open inventory)",
 	execute = function( ply, args )
+		if not SWGRP.Pocket or not SWGRP.Pocket.Store then
+			SWGRP.Notify( ply, "Pocket system is not loaded on the server." )
+			return
+		end
+
+		local sub = string.lower( args[1] or "" )
+		if sub == "menu" or sub == "open" then
+			SWGRP.Pocket.RequestDrop( ply )
+			return
+		end
+
 		SWGRP.Pocket.Store( ply )
+	end,
+})
+
+SWGRP.RegisterChatCommand( "pocketmenu", {
+	description = "Open the pocket inventory",
+	execute = function( ply, args )
+		if not SWGRP.Pocket or not SWGRP.Pocket.RequestDrop then
+			SWGRP.Notify( ply, "Pocket system is not loaded on the server." )
+			return
+		end
+		SWGRP.Pocket.RequestDrop( ply )
 	end,
 })
 
 SWGRP.RegisterChatCommand( "droppocket", {
 	description = "Open the pocket inventory",
 	execute = function( ply, args )
+		if not SWGRP.Pocket then
+			SWGRP.Notify( ply, "Pocket system is not loaded on the server." )
+			return
+		end
 		if SWGRP.Pocket.RequestDrop then
 			SWGRP.Pocket.RequestDrop( ply )
 		else

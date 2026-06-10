@@ -2,7 +2,7 @@ if SERVER then AddCSLuaFile() end
 
 SWEP.PrintName = "Structure Keys"
 SWEP.Author = "SWGRP"
-SWEP.Instructions = "Left click: Lock/Unlock door or owned control. Right click: Knock. (Press F2 to manage doors)"
+SWEP.Instructions = "Left click: Lock/Unlock door, vehicle, or owned control. Right click: Knock. (Press F2 to manage doors)"
 SWEP.Category = "SWGRP"
 SWEP.Spawnable = true
 SWEP.AdminOnly = false
@@ -44,7 +44,16 @@ function SWEP:PrimaryAttack()
 
 	if ent:isDoor() then
 		SWGRP.Doors.ToggleLock( self.Owner, ent )
-	elseif SWGRP.Doors.IsControl( ent ) and SWGRP.Doors.IsButtonOwned( ent ) then
+		return
+	end
+
+	local veh = SWGRP.VehiclesMgr and SWGRP.VehiclesMgr.Resolve and SWGRP.VehiclesMgr.Resolve( ent )
+	if veh and SWGRP.IsManagedVehicle( veh ) then
+		SWGRP.VehiclesMgr.ToggleLock( self.Owner, veh )
+		return
+	end
+
+	if SWGRP.Doors.IsControl( ent ) and SWGRP.Doors.IsButtonOwned( ent ) then
 		SWGRP.Doors.ToggleControlLock( self.Owner, ent )
 	end
 end

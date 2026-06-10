@@ -64,6 +64,10 @@ function O.CanTouch( ply, ent )
 		return owner == ply
 	end
 
+	if ent.SWGRP_PocketableVehicle or SWGRP.IsPocketableVehicleClass( ent:GetClass() ) then
+		return false
+	end
+
 	-- Unowned SWGRP deployables are locked down for everyone except admins.
 	if isSwgrpEntity( ent ) then
 		return false

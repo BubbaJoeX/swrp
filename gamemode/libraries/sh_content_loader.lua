@@ -380,6 +380,9 @@ function C.LoadVehicles()
 	for _, row in ipairs( C.ReadRows( "vehicles.csv" ) ) do
 		local name = C.Get( row, "name" )
 		if name ~= "" then
+		local pocketCol = C.Trim( C.Get( row, "pocketable" ) )
+		local pocketable = pocketCol == "" or C.ToBool( pocketCol )
+
 		SWGRP.RegisterVehicle( {
 			name = name,
 			model = C.Get( row, "model" ),
@@ -388,6 +391,7 @@ function C.LoadVehicles()
 			price = C.ToInt( C.Get( row, "price" ), 0 ),
 			allowed = C.ResolveTeams( C.Get( row, "allowed" ) ),
 			category = C.Get( row, "category" ) ~= "" and C.Get( row, "category" ) or "Vehicles",
+			pocketable = pocketable,
 		} )
 		C.Stats.vehicles = C.Stats.vehicles + 1
 		end

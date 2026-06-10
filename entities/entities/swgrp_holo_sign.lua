@@ -26,7 +26,7 @@ if SERVER then
 
 	function ENT:Initialize()
 
-		self:SetModel( "models/hunter/plates/plate1x1.mdl" )
+		self:SetModel( "models/squiddy/hologram_01.mdl" )
 
 		self:PhysicsInit( SOLID_VPHYSICS )
 

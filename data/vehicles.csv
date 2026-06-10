@@ -1,5 +1,6 @@
-# name,model,class,script,price,allowed,category
-# class = prop_vehicle_jeep or prop_vehicle_airboat
-# script = path under scripts/vehicles/
-name,model,class,script,price,allowed,category
-Imp Speeder,models/imp_speeder/av211.mdl,prop_vehicle_jeep,scripts/vehicles/imp_speeder.txt,4500,*,Vehicles
+# name,model,class,script,price,allowed,category,pocketable
+# class = entity classname (imp_speeder) or prop_vehicle_jeep / prop_vehicle_airboat
+# script = vehiclescript path (builtin jeep/airboat only; leave empty for custom entities)
+# pocketable = 1/0 (default 1) — owner can physgun / pocket purchased vehicles
+name,model,class,script,price,allowed,category,pocketable
+AV-21 Landspeeder,models/imp_speeder/av211.mdl,imp_speeder,,4500,*,Vehicles,1

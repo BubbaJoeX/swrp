@@ -152,6 +152,7 @@ C.AdminWeapons = {
 	"swgrp_admin_jobspawntool",
 	"swgrp_admin_jailtool",
 	"swgrp_admin_mapadjuster",
+	"swgrp_admin_mountoffset",
 	"swgrp_entity_spawner",
 	"swgrp_admin_ownershipchanger",
 }

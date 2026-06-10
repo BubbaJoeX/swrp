@@ -7,7 +7,9 @@ SWGRP.Pocket = SWGRP.Pocket or {}
 SWGRP.Pocket.Slots = SWGRP.Pocket.Slots or {}
 SWGRP.Pocket.SlotPanels = SWGRP.Pocket.SlotPanels or {}
 
-local POCKET_MAX = 8
+local function pocketMaxSlots()
+	return ( SWGRP.Config and SWGRP.Config.MaxPocket ) or 8
+end
 local SLOT_SIZE = 96
 local INV_VISIBLE_ROWS = 2
 local DRAG_TYPES = { "SWGRP_PocketItem", "SWGRP_InvWeapon" }
@@ -24,7 +26,7 @@ local BLOCKED = {
 local lastNetAt = {}
 
 local function initSlots()
-	for i = 1, POCKET_MAX do
+	for i = 1, pocketMaxSlots() do
 		if SWGRP.Pocket.Slots[i] == nil then
 			SWGRP.Pocket.Slots[i] = false
 		end
@@ -67,7 +69,7 @@ end
 
 local function storeWeapon( slot, class )
 	if not class or class == "" then return end
-	slot = math.Clamp( math.floor( slot or 0 ), 0, POCKET_MAX )
+	slot = math.Clamp( math.floor( slot or 0 ), 0, pocketMaxSlots() )
 	if not canSendNet( "store_" .. class ) then return end
 
 	net.Start( "SWGRP_PocketStore" )
@@ -78,7 +80,7 @@ end
 
 local function dropSlot( slot )
 	slot = math.floor( slot or 0 )
-	if slot < 1 or slot > POCKET_MAX then return end
+	if slot < 1 or slot > pocketMaxSlots() then return end
 	if not canSendNet( "drop_" .. slot ) then return end
 
 	net.Start( "SWGRP_PocketDrop" )
@@ -88,7 +90,8 @@ end
 
 local function swapSlots( a, b )
 	a, b = math.floor( a or 0 ), math.floor( b or 0 )
-	if a < 1 or a > POCKET_MAX or b < 1 or b > POCKET_MAX or a == b then return end
+	local max = pocketMaxSlots()
+	if a < 1 or a > max or b < 1 or b > max or a == b then return end
 	if not canSendNet( "swap_" .. a .. "_" .. b ) then return end
 
 	net.Start( "SWGRP_PocketSwap" )
@@ -127,7 +130,7 @@ end
 
 net.Receive( "SWGRP_PocketSync", function()
 	SWGRP.Pocket.Slots = {}
-	for i = 1, POCKET_MAX do
+	for i = 1, pocketMaxSlots() do
 		SWGRP.Pocket.Slots[i] = readItem()
 	end
 
@@ -165,6 +168,9 @@ function SWGRP.Pocket.ItemLabel( item )
 	if SWGRP.Entities and SWGRP.Entities[item.class] and SWGRP.Entities[item.class].name then
 		return SWGRP.Entities[item.class].name
 	end
+
+	local veh = SWGRP.GetVehicleByClass and SWGRP.GetVehicleByClass( item.class )
+	if veh and veh.name then return veh.name end
 
 	return item.class or "Item"
 end
@@ -390,7 +396,7 @@ local function makeInventoryWeapon( parent, class )
 end
 
 function SWGRP.Pocket.RefreshHighlights()
-	for i = 1, POCKET_MAX do
+	for i = 1, pocketMaxSlots() do
 		local slot = SWGRP.Pocket.SlotPanels[i]
 		local item = SWGRP.Pocket.Slots[i]
 		if IsValid( slot ) then
@@ -421,7 +427,7 @@ function SWGRP.Pocket.UpdateStatusBar()
 	if not IsValid( frame ) or not IsValid( frame.StatusLabel ) then return end
 
 	local filled = 0
-	for i = 1, POCKET_MAX do
+	for i = 1, pocketMaxSlots() do
 		if slotHasItem( SWGRP.Pocket.Slots[i] ) then filled = filled + 1 end
 	end
 
@@ -436,7 +442,7 @@ function SWGRP.Pocket.UpdateStatusBar()
 		detail = "Store " .. abbrevText( SWGRP.Pocket.ItemLabel( { kind = "weapon", class = SWGRP.Pocket.SelectedWeapon } ), 24 )
 	end
 
-	frame.StatusLabel:SetText( string.format( "%d / %d slots used  •  %s", filled, POCKET_MAX, detail ) )
+	frame.StatusLabel:SetText( string.format( "%d / %d slots used  •  %s", filled, pocketMaxSlots(), detail ) )
 	SWGRP.Pocket.RefreshDropZone()
 end
 
@@ -463,12 +469,12 @@ function SWGRP.Pocket.RefreshPocket()
 		SWGRP.Pocket.PocketGrid = grid
 
 		SWGRP.Pocket.SlotPanels = {}
-		for i = 1, POCKET_MAX do
+		for i = 1, pocketMaxSlots() do
 			makePocketSlot( grid, i )
 		end
 	end
 
-	for i = 1, POCKET_MAX do
+	for i = 1, pocketMaxSlots() do
 		local slot = SWGRP.Pocket.SlotPanels[i]
 		local item = SWGRP.Pocket.Slots[i]
 		if IsValid( slot ) then
@@ -548,8 +554,14 @@ function SWGRP.Pocket.RebuildMenu()
 end
 
 function SWGRP.Pocket.OpenMenu()
+	local ply = LocalPlayer()
+	if not IsValid( ply ) or not ply:Alive() then return end
+
 	local UI = SWGRP.UI
-	if not UI or not UI.CreateTerminalFrame then return end
+	if not UI or not UI.CreateTerminalFrame then
+		chat.AddText( Color( 255, 180, 50 ), "[SWGRP] ", color_white, "Pocket UI failed to load. Reconnect or reload the gamemode." )
+		return
+	end
 	if IsValid( SWGRP.Pocket.Menu ) then return end
 
 	initSlots()
@@ -662,6 +674,9 @@ function SWGRP.Pocket.OpenMenu()
 end
 
 function SWGRP.Pocket.ToggleMenu()
+	local ply = LocalPlayer()
+	if not IsValid( ply ) or not ply:Alive() then return end
+
 	if IsValid( SWGRP.Pocket.Menu ) then
 		SWGRP.Pocket.Menu:Remove()
 		return
@@ -670,22 +685,75 @@ function SWGRP.Pocket.ToggleMenu()
 	SWGRP.Pocket.OpenMenu()
 end
 
-local function pocketKeyPressed( ply )
-	if ply ~= LocalPlayer() then return end
-	if not IsValid( ply ) or not ply:Alive() then return end
-	if gui.IsConsoleVisible() or ply:IsTyping() then return end
-	if IsValid( vgui.GetKeyboardFocus() ) then return end
+local function pocketInputBlocked()
+	local ply = LocalPlayer()
+	if not IsValid( ply ) or not ply:Alive() then return true end
+	if gui.IsConsoleVisible() or gui.IsGameUIVisible() or ply:IsTyping() then return true end
+
+	local pocketOpen = IsValid( SWGRP.Pocket.Menu )
+	if not pocketOpen then
+		if IsValid( g_SpawnMenu ) and g_SpawnMenu:IsVisible() then return true end
+		if IsValid( g_ContextMenu ) and g_ContextMenu:IsVisible() then return true end
+		if IsValid( SWGRP.F4Frame ) then return true end
+		if IsValid( SWGRP.ServicesFrame ) then return true end
+		if IsValid( SWGRP.Scoreboard ) then return true end
+	end
+
+	return false
+end
+
+local pocketKeyFrame = -1
+
+local function handlePocketKey()
+	if pocketInputBlocked() then return false end
 
 	if input.IsKeyDown( KEY_LALT ) or input.IsKeyDown( KEY_RALT ) then
 		quickStore()
 	else
 		SWGRP.Pocket.ToggleMenu()
 	end
+
+	return true
 end
 
-hook.Add( "PlayerButtonDown", "SWGRP_PocketKey", function( ply, btn )
-	if btn ~= KEY_T then return end
-	pocketKeyPressed( ply )
+local function consumePocketKeyOnce()
+	if pocketKeyFrame == FrameNumber() then return true end
+	if not handlePocketKey() then return false end
+	pocketKeyFrame = FrameNumber()
+	return true
+end
+
+-- Bound keys (e.g. impulse 100 on T) fire PlayerBindPress; unbound T uses Think.
+hook.Add( "PlayerBindPress", "SWGRP_PocketKey", function( ply, bind, pressed )
+	if ply ~= LocalPlayer() or not pressed then return end
+	if not input.WasKeyPressed( KEY_T ) then return end
+	if consumePocketKeyOnce() then return true end
+end )
+
+hook.Add( "Think", "SWGRP_PocketKey", function()
+	if not input.WasKeyPressed( KEY_T ) then return end
+	consumePocketKeyOnce()
+end )
+
+concommand.Add( "+swgrp_pocket", function()
+	consumePocketKeyOnce()
+end )
+
+concommand.Add( "-swgrp_pocket", function() end )
+
+concommand.Add( "swgrp_pocket_bind", function()
+	RunConsoleCommand( "bind", "t", "+swgrp_pocket" )
+	if SWGRP.Notify then
+		SWGRP.Notify( nil, "T is now bound to pocket (+swgrp_pocket)." )
+	else
+		chat.AddText( Color( 255, 180, 50 ), "[SWGRP] ", color_white, "T is now bound to pocket." )
+	end
+end )
+
+hook.Add( "InitPostEntity", "SWGRP_PocketBindHint", function()
+	local bound = input.LookupBinding( "t" )
+	if bound and bound ~= "" then return end
+	RunConsoleCommand( "bind", "t", "+swgrp_pocket" )
 end )
 
 net.Receive( "SWGRP_PocketOpen", function()

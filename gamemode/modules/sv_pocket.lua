@@ -15,6 +15,8 @@ local BLOCKED = {
 }
 
 local POCKET_REACH = 150
+local POCKET_REACH_VEHICLE = 320
+local POCKET_TRACE_DIST = 400
 
 function SWGRP.Pocket.Max()
 	return SWGRP.Config and SWGRP.Config.MaxPocket or 8
@@ -156,9 +158,90 @@ function SWGRP.Pocket.SlotOccupied( slots, slot )
 	return SWGRP.Pocket.NormalizeItem( slots[slot] ) ~= false
 end
 
+function SWGRP.Pocket.IsVehicleEntity( ent )
+	if not IsValid( ent ) then return false end
+	return ent.SWGRP_PocketableVehicle or SWGRP.IsPocketableVehicleClass( ent:GetClass() )
+end
+
+function SWGRP.Pocket.IsPocketableClass( ent )
+	if not IsValid( ent ) then return false end
+	local class = ent:GetClass()
+	if SWGRP.Pocket.IsVehicleEntity( ent ) then return true end
+	if string.sub( class, 1, 6 ) ~= "swgrp_" then return false end
+	return class ~= "swgrp_dropped_credits"
+end
+
+function SWGRP.Pocket.ResolveTarget( ent )
+	if not IsValid( ent ) then return nil end
+
+	local cur = ent
+	for _ = 1, 10 do
+		if not IsValid( cur ) then return nil end
+		if SWGRP.Pocket.IsPocketableClass( cur ) then return cur end
+		cur = cur:GetParent()
+	end
+
+	return nil
+end
+
+function SWGRP.Pocket.GetReach( ent )
+	if SWGRP.Pocket.IsVehicleEntity( ent ) then return POCKET_REACH_VEHICLE end
+	return POCKET_REACH
+end
+
+function SWGRP.Pocket.PlayerOwnsEntity( ply, ent )
+	if not IsValid( ply ) or not IsValid( ent ) then return false end
+
+	if SWGRP.Ownership and SWGRP.Ownership.IsOwner then
+		return SWGRP.Ownership.IsOwner( ply, ent )
+	end
+
+	if ent.SWGRP_Owner == ply then return true end
+	if isfunction( ent.CPPIGetOwner ) and ent:CPPIGetOwner() == ply then return true end
+
+	return false
+end
+
+function SWGRP.Pocket.FindOwnedVehicleNear( ply, pos, radius )
+	if not IsValid( ply ) or not pos then return nil end
+
+	radius = radius or POCKET_REACH_VEHICLE
+	local best, bestDist = nil, radius * radius
+
+	for _, ent in ipairs( ents.FindInSphere( pos, radius ) ) do
+		if not SWGRP.Pocket.IsVehicleEntity( ent ) then continue end
+		if not SWGRP.Pocket.PlayerOwnsEntity( ply, ent ) then continue end
+
+		local dist = pos:DistToSqr( ent:GetPos() )
+		if dist <= bestDist then
+			bestDist = dist
+			best = ent
+		end
+	end
+
+	return best
+end
+
+function SWGRP.Pocket.PocketTrace( ply )
+	return util.TraceLine( {
+		start = ply:EyePos(),
+		endpos = ply:EyePos() + ply:GetAimVector() * POCKET_TRACE_DIST,
+		filter = ply,
+		mask = MASK_SOLID,
+	} )
+end
+
 function SWGRP.Pocket.CanPocketEntity( ply, ent )
 	if not IsValid( ply ) or not IsValid( ent ) then return false end
 	if ent:IsPlayer() or ent:IsWeapon() then return false end
+
+	if SWGRP.Pocket.IsVehicleEntity( ent ) then
+		if SWGRP.Pocket.PlayerOwnsEntity( ply, ent ) then
+			ent.SWGRP_PocketableVehicle = true
+			return true
+		end
+		return false
+	end
 
 	local class = ent:GetClass()
 	if string.sub( class, 1, 6 ) ~= "swgrp_" then return false end
@@ -366,6 +449,11 @@ end
 
 local function spawnEntity( ply, item )
 	local class = item.class
+
+	if SWGRP.IsPocketableVehicleClass( class ) and SWGRP.VehiclesMgr and SWGRP.VehiclesMgr.SpawnFromPocketItem then
+		return SWGRP.VehiclesMgr.SpawnFromPocketItem( ply, item )
+	end
+
 	local state = item.state or {}
 	local pos, ang = SWGRP.Economy.GroundSpawn( ply )
 
@@ -396,6 +484,10 @@ local function spawnEntity( ply, item )
 	else
 		ent.SWGRP_Owner = ply
 		if ent.CPPISetOwner then ent:CPPISetOwner( ply ) end
+	end
+
+	if SWGRP.IsPocketableVehicleClass( class ) then
+		ent.SWGRP_PocketableVehicle = true
 	end
 
 	ent:SetPos( pos )
@@ -606,6 +698,17 @@ function SWGRP.Pocket.StoreEntity( ply, ent, slot )
 		return false
 	end
 
+	if IsValid( ply ) and ply:InVehicle() then
+		local veh = ply:GetVehicle()
+		if veh == ent or ( IsValid( veh ) and veh:GetParent() == ent ) then
+			ply:ExitVehicle()
+		end
+	end
+
+	if SWGRP.VehiclesMgr and SWGRP.VehiclesMgr.EjectOccupants then
+		SWGRP.VehiclesMgr.EjectOccupants( ent, ply )
+	end
+
 	slots[slot] = itemFromEntity( ent )
 	ent:Remove()
 	syncPocket( ply )
@@ -616,11 +719,39 @@ end
 function SWGRP.Pocket.Store( ply, silent )
 	if not pocketAllowed( ply ) then return false end
 
-	local tr = ply:GetEyeTrace()
-	local ent = tr.Entity
-	if IsValid( ent ) and SWGRP.Pocket.CanPocketEntity( ply, ent )
-		and ply:EyePos():DistToSqr( ent:WorldSpaceCenter() ) <= POCKET_REACH * POCKET_REACH then
-		return SWGRP.Pocket.StoreEntity( ply, ent )
+	local tr = SWGRP.Pocket.PocketTrace( ply )
+	local ent = SWGRP.Pocket.ResolveTarget( tr.Entity )
+
+	if not IsValid( ent ) and tr.Hit then
+		ent = SWGRP.Pocket.FindOwnedVehicleNear( ply, tr.HitPos, POCKET_REACH_VEHICLE )
+	end
+
+	if IsValid( ent ) then
+		local reach = SWGRP.Pocket.GetReach( ent )
+		local distSqr = ply:EyePos():DistToSqr( tr.HitPos )
+
+		if distSqr <= reach * reach then
+			if SWGRP.Pocket.CanPocketEntity( ply, ent ) then
+				return SWGRP.Pocket.StoreEntity( ply, ent )
+			elseif not silent then
+				if SWGRP.Pocket.IsVehicleEntity( ent ) then
+					SWGRP.Notify( ply, "You don't own that vehicle." )
+				else
+					SWGRP.Notify( ply, "You can't pocket that." )
+				end
+			end
+			return false
+		elseif not silent then
+			SWGRP.Notify( ply, "Too far away." )
+			return false
+		end
+	end
+
+	if ply:InVehicle() then
+		local veh = SWGRP.Pocket.ResolveTarget( ply:GetVehicle() )
+		if IsValid( veh ) and SWGRP.Pocket.CanPocketEntity( ply, veh ) then
+			return SWGRP.Pocket.StoreEntity( ply, veh )
+		end
 	end
 
 	local wep = ply:GetActiveWeapon()
@@ -691,4 +822,10 @@ hook.Add( "SWGRPPlayerArrested", "SWGRP_PocketArrestDrop", function( target )
 	local slots = SWGRP.Pocket.GetSlots( target )
 	for i = 1, SWGRP.Pocket.Max() do slots[i] = false end
 	syncPocket( target )
+end )
+
+hook.Add( "PlayerInitialSpawn", "SWGRP_PocketInitialSync", function( ply )
+	timer.Simple( 1, function()
+		if IsValid( ply ) then syncPocket( ply ) end
+	end )
 end )

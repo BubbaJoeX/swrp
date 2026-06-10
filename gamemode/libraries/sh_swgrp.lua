@@ -82,7 +82,13 @@ function SWGRP.RegisterAmmoType( name, data )
 end
 
 function SWGRP.RegisterVehicle( data )
+	data.pocketable = data.pocketable ~= false
 	table.insert( SWGRP.Vehicles, data )
+
+	if data.pocketable and data.class then
+		SWGRP.PocketableVehicleClasses = SWGRP.PocketableVehicleClasses or {}
+		SWGRP.PocketableVehicleClasses[data.class] = true
+	end
 end
 
 function SWGRP.RegisterChatCommand( cmd, data )
