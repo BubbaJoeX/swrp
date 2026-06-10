@@ -1,16 +1,16 @@
 name,command,category,allegiance,color,models,description,weapons,salary,max,admin,vote,flags
 Colonist,colonist,Civilians,NEUTRAL,20 150 20,models/player/group01/male_01.mdl|models/player/group01/male_02.mdl|models/player/group01/female_01.mdl,A common settler on this world. Work trade and survive.,,45,0,0,0,
-Refugee,refugee,Civilians,NEUTRAL,80 80 80,models/player/corpse1.mdl,Destitute and displaced. Scavenge to survive.,,0,0,0,0,hobo
-Merchant,merchant,Civilians,NEUTRAL,200 160 50,models/player/group01/male_03.mdl,Buy low sell high across the Outer Rim.,,55,4,0,0,
-Artisan,artisan,Civilians,NEUTRAL,180 120 60,models/player/Group02/male_04.mdl,Craft goods and supply the colony economy.,,50,4,0,0,
-Entertainer,entertainer,Civilians,NEUTRAL,255 100 200,models/player/group01/female_02.mdl,Perform music and dance in cantinas across the galaxy.,,50,3,0,0,
-Cantina Operator,cantina,Civilians,NEUTRAL,200 100 50,models/1/pm_scientist_human1.mdl,Serve refreshments. The heart of any spaceport.,,55,2,0,0,cook
-Doctor,doctor,Civilians,NEUTRAL,50 200 200,models/player/grady/starwars/duros_padawan.mdl,Treat wounds and illness. A vital colony profession.,weapon_medkit,70,3,0,0,medic doctor
-Smuggler,smuggler,Combat Professions,UNDERWORLD,150 50 200,models/player/group03/male_01.mdl,Move contraband through Imperial blockades.,weapon_pistol|swgrp_zip_tie|swgrp_disguise|swgrp_keypad_cracker,55,4,0,0,disguise
-Bounty Hunter,bountyhunter,Combat Professions,UNDERWORLD,200 50 50,models/urizel/ig11/ig11_player.mdl,Hunt targets with valid contracts.,dc17grapple|weapon_pistol|swgrp_lockpick|swgrp_zip_tie|swgrp_keypad_cracker,60,3,0,0,bountyhunter
-Commando,commando,Combat Professions,UNDERWORLD,100 50 50,models/player/group03/male_02.mdl,Heavy weapons specialist. Frontline fighter.,weapon_smg1,65,3,0,1,
-Arms Dealer,armsdealer,Combat Professions,UNDERWORLD,200 150 50,models/byan7259/bodian_player/segular_rodian_player.mdl,Legally trade weapons with the proper permits.,,55,2,0,0,hasLicense
-Combat Medic,medic,Combat Professions,UNDERWORLD,50 200 100,models/player/group03/male_04.mdl,Field medic supporting combat operations.,weapon_medkit,65,3,0,0,medic
+Refugee,refugee,Civilians,NEUTRAL,80 80 80,models/nada/pms/female/Controller.mdl|models/nada/pms/male/Controller.mdl,Destitute and displaced. Scavenge to survive.,,0,0,0,0,hobo
+Merchant,merchant,Civilians,NEUTRAL,200 160 50,models/byan7259/bodian_player/segular_rodian_player.mdl,Buy low sell high across the Outer Rim.,,55,4,0,0,
+Artisan,artisan,Civilians,NEUTRAL,180 120 60,models/konnie/swgoh/pack/raddus.mdl|models/konnie/swgoh/pack/gungan_phalanx.mdl,Craft goods and supply the colony economy.,,50,4,0,0,
+Entertainer,entertainer,Civilians,NEUTRAL,255 100 200,models/konnie/swgoh/pack3/huttslayerleia.mdl,Perform music and dance in cantinas across the galaxy.,,50,3,0,0,
+Cantina Operator,cantina,Civilians,NEUTRAL,200 100 50,models/player/grady/starwars/duros_padawan.mdl,Serve refreshments. The heart of any spaceport.,,55,2,0,0,cook
+Doctor,doctor,Civilians,NEUTRAL,50 200 200,models/1/pm_scientist_human1.mdl|models/4/pm_scientist_corona.mdl,Treat wounds and illness. A vital colony profession.,weapon_medkit,70,3,0,0,medic doctor
+Smuggler,smuggler,Combat Professions,UNDERWORLD,150 50 200,models/player/SGG/Starwars/Rebels/r_soldier_urban/male_02.mdl,Move contraband through Imperial blockades.,weapon_pistol|swgrp_zip_tie|swgrp_disguise|swgrp_keypad_cracker,55,4,0,0,disguise
+Bounty Hunter,bountyhunter,Combat Professions,UNDERWORLD,200 50 50,models/urizel/ig11/ig11_player.mdl|models/konnie/swgoh/pack3/ig11.mdl,Hunt targets with valid contracts.,dc17grapple|weapon_pistol|swgrp_lockpick|swgrp_zip_tie|swgrp_keypad_cracker,60,3,0,0,bountyhunter
+Commando,commando,Combat Professions,UNDERWORLD,100 50 50,models/konnie/swgoh/pack/blackkrrsantan.mdl,Heavy weapons specialist. Frontline fighter.,weapon_smg1,65,3,0,1,
+Arms Dealer,armsdealer,Combat Professions,UNDERWORLD,200 150 50,models/konnie/swgoh/pack/pykecapo.mdl,Legally trade weapons with the proper permits.,,55,2,0,0,hasLicense
+Combat Medic,medic,Combat Professions,UNDERWORLD,50 200 100,models/nada/female/MedicalHazmat.mdl,Field medic supporting combat operations.,weapon_medkit,65,3,0,0,medic
 Imperial Stormtrooper Captain,stormtroopercaptain,Imperial Forces,IMPERIAL,50 220 100,models/Player/SGG/Starwars/sandtrooper_semi.mdl,Oversee the Stormtrooper squadrons.,weapon_pistol|swgrp_arrest_baton|swgrp_stun_baton|swgrp_keys,95,4,0,1,captain
 Imperial Stormtrooper,stormtrooper,Imperial Forces,IMPERIAL,200 200 220,models/Player/SGG/Starwars/stormtrooper_color.mdl,Enforce Imperial law. Protect and serve the Empire.,weapon_pistol|swgrp_arrest_baton|swgrp_stun_baton|swgrp_keys,85,12,0,1,stormtrooper
 Imperial Officer,officer,Imperial Forces,IMPERIAL,150 150 200,models/nada/pms/male/admiral.mdl,Command stormtroopers. Issue warrants and permits.,weapon_pistol|swgrp_arrest_baton|swgrp_unarrest_baton|swgrp_stun_baton|swgrp_keys,100,2,0,1,chief officer stormtrooper

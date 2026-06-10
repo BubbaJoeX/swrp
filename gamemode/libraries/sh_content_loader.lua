@@ -21,20 +21,22 @@ C.Stats = {
 	vehicles = 0,
 }
 
+-- Keys are lowercase; values are the job table field names (hasLicense is camelCase).
 local JOB_FLAGS = {
-	hobo = true,
-	cook = true,
-	medic = true,
-	doctor = true,
-	bountyhunter = true,
-	hasLicense = true,
-	governor = true,
-	officer = true,
-	stormtrooper = true,
-	commander = true,
-	chief = true,
-	whitelist = true,
-	disguise = true,
+	hobo = "hobo",
+	cook = "cook",
+	medic = "medic",
+	doctor = "doctor",
+	bountyhunter = "bountyhunter",
+	haslicense = "hasLicense",
+	governor = "governor",
+	officer = "officer",
+	stormtrooper = "stormtrooper",
+	commander = "commander",
+	chief = "chief",
+	whitelist = "whitelist",
+	disguise = "disguise",
+	captain = "captain",
 }
 
 local ALLEGIANCE_MAP = {
@@ -220,8 +222,9 @@ end
 function C.ApplyJobFlags( data, flagsStr )
 	for flag in string.gmatch( string.lower( flagsStr or "" ), "[^,%s]+" ) do
 		flag = C.Trim( flag )
-		if JOB_FLAGS[flag] then
-			data[flag] = true
+		local field = JOB_FLAGS[flag]
+		if field then
+			data[field] = true
 		end
 	end
 end
