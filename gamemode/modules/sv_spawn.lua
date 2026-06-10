@@ -32,9 +32,6 @@ end
 function SWGRP.GrantWeapon( ply, class )
 	if not IsValid( ply ) or not class or class == "" then return false end
 
-	local swep = weapons.Get( class ) or weapons.GetStored( class )
-	if not swep then return false end
-
 	ply.SWGRP_GrantedWeapons = ply.SWGRP_GrantedWeapons or {}
 	ply.SWGRP_GrantedWeapons[class] = true
 
@@ -54,6 +51,24 @@ function SWGRP.GrantWeapon( ply, class )
 	end
 
 	return true
+end
+
+function SWGRP.GrantJobWeapons( ply )
+	if not IsValid( ply ) then return end
+
+	local job = SWGRP.GetJob( ply:Team() )
+	if not job or not job.weapons then return end
+
+	for _, wep in ipairs( job.weapons ) do
+		if wep and wep ~= "" then
+			if ply:HasWeapon( wep ) then
+				ply.SWGRP_GrantedWeapons = ply.SWGRP_GrantedWeapons or {}
+				ply.SWGRP_GrantedWeapons[wep] = true
+			else
+				SWGRP.GrantWeapon( ply, wep )
+			end
+		end
+	end
 end
 
 function SWGRP.BuildAllowedLoadout( ply )
@@ -116,15 +131,7 @@ function SWGRP.EnforceLoadout( ply )
 	ply:Give( "swgrp_keys" )
 	ply.SWGRP_SkipSpawnAllowlistGive = nil
 
-	if job and job.weapons then
-		for _, wep in ipairs( job.weapons ) do
-			if not ply:HasWeapon( wep ) then
-				ply.SWGRP_SkipSpawnAllowlistGive = wep
-				ply:Give( wep )
-				ply.SWGRP_SkipSpawnAllowlistGive = nil
-			end
-		end
-	end
+	SWGRP.GrantJobWeapons( ply )
 
 	if ply.SWGRP_GrantedWeapons then
 		for class in pairs( ply.SWGRP_GrantedWeapons ) do

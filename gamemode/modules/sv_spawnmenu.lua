@@ -53,6 +53,7 @@ end )
 hook.Add( "PlayerGiveSWEP", "SWGRP_SpawnAllowlist", function( ply, wname )
 	if ply.SWGRP_SkipSpawnAllowlistGive == wname then return true end
 	if string.StartWith( wname or "", "swgrp_" ) then return true end
+	if SWGRP.IsJobWeapon and SWGRP.IsJobWeapon( ply, wname ) then return true end
 	return BlockSpawn( ply, "weapons", wname )
 end )
 

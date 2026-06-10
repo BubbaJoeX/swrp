@@ -124,6 +124,19 @@ function SWGRP.GetJobByCommand( cmd )
 	end
 end
 
+function SWGRP.IsJobWeapon( ply, class )
+	if not IsValid( ply ) or not class or class == "" then return false end
+
+	local job = SWGRP.GetJob( ply:Team() )
+	if not job or not job.weapons then return false end
+
+	for _, wep in ipairs( job.weapons ) do
+		if wep == class then return true end
+	end
+
+	return false
+end
+
 -- True if the player's *current* profession command is in the allow list (a
 -- lowercased command array, or nil/empty for unrestricted). Matching by command
 -- text rather than a pre-resolved team id keeps access checks correct even if

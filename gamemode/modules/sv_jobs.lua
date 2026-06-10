@@ -89,6 +89,15 @@ function SWGRP.JobsMgr.SetJob( ply, teamId, force, modelIndex )
 	end
 
 	ply:Spawn()
+
+	if SWGRP.GrantJobWeapons then
+		timer.Simple( 0, function()
+			if IsValid( ply ) then
+				SWGRP.GrantJobWeapons( ply )
+			end
+		end )
+	end
+
 	SWGRP.JobsMgr.ApplyModel( ply, teamId, modelIndex )
 	SWGRP.Profession.Sync( ply )
 	SWGRP.Persistence.SaveNow( ply )
