@@ -89,6 +89,10 @@ C.MaxProfessionLevel = 10
 -- Crafting material limits
 C.MaxMaterials       = 99
 
+-- Energy cell ammunition (blaster weapons)
+C.AmmoRoundsPerEnergyCell   = 5
+C.ShipmentWeaponGrantCells  = 2
+
 -- Contraband
 C.ScanRange          = 200
 C.ContrabandFine     = true

@@ -28,6 +28,12 @@ net.Receive( "SWGRP_BuyAmmo", function( len, ply )
 	SWGRP.Economy.BuyAmmo( ply, name )
 end )
 
+net.Receive( "SWGRP_UseEnergyCell", function( _, ply )
+	if SWGRP.Ammo and SWGRP.Ammo.UseMaterialCell then
+		SWGRP.Ammo.UseMaterialCell( ply )
+	end
+end )
+
 net.Receive( "SWGRP_BuyVehicle", function( len, ply )
 	local id = net.ReadUInt( 8 )
 	SWGRP.VehiclesMgr.Buy( ply, id )

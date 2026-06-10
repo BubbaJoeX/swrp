@@ -369,6 +369,7 @@ function C.LoadAmmo()
 			price = C.ToInt( C.Get( row, "price" ), 0 ),
 			amountGiven = C.ToInt( C.Get( row, "amount", "amountgiven" ), 0 ),
 			allowed = C.ResolveTeams( C.Get( row, "allowed" ) ),
+			allowedcmds = C.AllowedCommands( C.Get( row, "allowed" ) ),
 			category = C.Get( row, "category" ) ~= "" and C.Get( row, "category" ) or "Ammunition",
 		} )
 		C.Stats.ammo = C.Stats.ammo + 1
@@ -414,6 +415,10 @@ function C.LoadAll()
 		"[SWGRP] CSV content loaded: %d jobs, %d entities, %d shipments, %d foods, %d spices, %d ammo, %d vehicles\n",
 		s.jobs, s.entities, s.shipments, s.foods, s.spices, s.ammo, s.vehicles
 	) )
+
+	if SWGRP.Ammo and SWGRP.Ammo.PatchWeaponTables then
+		SWGRP.Ammo.PatchWeaponTables()
+	end
 end
 
 -- Re-read all CSV content at runtime. Jobs are updated in place (their team ids

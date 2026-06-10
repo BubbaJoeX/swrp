@@ -3,45 +3,54 @@
 ---------------------------------------------------------------------------]]
 
 local function SWGRP_GiveAmmoForWeapons( ply )
-	local ammoGiven = {}
+	if not SWGRP.Ammo then return end
+
 	for _, wep in ipairs( ply:GetWeapons() ) do
-		local primary = wep:GetPrimaryAmmoType()
-		local secondary = wep:GetSecondaryAmmoType()
-
-		if primary >= 0 and not ammoGiven[primary] then
-			ply:GiveAmmo( 120, primary, true )
-			ammoGiven[primary] = true
-		end
-
-		if secondary >= 0 and not ammoGiven[secondary] then
-			ply:GiveAmmo( 120, secondary, true )
-			ammoGiven[secondary] = true
+		local class = wep:GetClass()
+		if SWGRP.Ammo.IsEnergyWeapon( class ) then
+			if wep:Clip1() <= 0 and wep:GetMaxClip1() > 0 then
+				SWGRP.Ammo.GrantPickupAmmo( ply, class )
+			end
+		else
+			local primary = wep:GetPrimaryAmmoType()
+			local secondary = wep:GetSecondaryAmmoType()
+			if primary >= 0 and ply:GetAmmoCount( primary ) <= 0 then
+				ply:GiveAmmo( 30, primary, true )
+			end
+			if secondary >= 0 and ply:GetAmmoCount( secondary ) <= 0 then
+				ply:GiveAmmo( 30, secondary, true )
+			end
 		end
 	end
 end
 
+function SWGRP.IsGrantedWeapon( ply, class )
+	if not IsValid( ply ) or not class or class == "" then return false end
+	return ply.SWGRP_GrantedWeapons and ply.SWGRP_GrantedWeapons[class] == true
+end
+
 function SWGRP.GrantWeapon( ply, class )
-	if not IsValid( ply ) or not class or class == "" or not weapons.Get( class ) then return false end
+	if not IsValid( ply ) or not class or class == "" then return false end
+
+	local swep = weapons.Get( class ) or weapons.GetStored( class )
+	if not swep then return false end
 
 	ply.SWGRP_GrantedWeapons = ply.SWGRP_GrantedWeapons or {}
 	ply.SWGRP_GrantedWeapons[class] = true
 
 	ply.SWGRP_SkipSpawnAllowlistGive = class
+	ply.SWGRP_SkipLicensePickup = class
 	ply:Give( class )
 	ply.SWGRP_SkipSpawnAllowlistGive = nil
+	ply.SWGRP_SkipLicensePickup = nil
 
-	if not ply:HasWeapon( class ) then return false end
+	if not ply:HasWeapon( class ) then
+		ply.SWGRP_GrantedWeapons[class] = nil
+		return false
+	end
 
-	local wep = ply:GetWeapon( class )
-	if IsValid( wep ) then
-		local primary = wep:GetPrimaryAmmoType()
-		local secondary = wep:GetSecondaryAmmoType()
-		if primary >= 0 and ply:GetAmmoCount( primary ) <= 0 then
-			ply:GiveAmmo( 90, primary, true )
-		end
-		if secondary >= 0 and ply:GetAmmoCount( secondary ) <= 0 then
-			ply:GiveAmmo( 90, secondary, true )
-		end
+	if SWGRP.Ammo then
+		SWGRP.Ammo.GrantPickupAmmo( ply, class )
 	end
 
 	return true

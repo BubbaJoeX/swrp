@@ -107,7 +107,7 @@ hook.Add( "HUDPaint", "SWGRP_MainHUD", function()
 
 	-- Faction standing
 	local fx, fy = px + pw + 10, py
-	local fh = 78
+	local fh = 92
 	HUD.DrawPanel( fx, fy, 148, fh, 200 )
 	HUD.DrawHeader( fx, fy, 148, "STANDING" )
 	HUD.TextShadow( "Imperial  " .. ply:SWGRP_GetFaction( "imperial" ), "SWGRP_HUD_Small", fx + 10, fy + 34, Color( 180, 190, 220 ), TEXT_ALIGN_LEFT )
@@ -123,8 +123,13 @@ hook.Add( "HUDPaint", "SWGRP_MainHUD", function()
 		surface.DrawOutlinedRect( bx, by, bw, bh, 1 )
 		HUD.TextShadow( "IMPERIAL LOCKDOWN IN EFFECT", "SWGRP_HUD_Subtitle", scrW * 0.5, by + bh / 2, Color( 255, 120, 120 ), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER )
 	end
+end )
 
-	HUD.DrawToasts()
+-- Draw after VGUI (F4/F3 terminals) so purchase and notify toasts stay visible.
+hook.Add( "DrawOverlay", "SWGRP_Toasts", function()
+	local UI = SWGRP.UI
+	if not UI or not UI.HUD or not UI.HUD.DrawToasts then return end
+	UI.HUD.DrawToasts()
 end )
 
 net.Receive( "SWGRP_Notify", function()

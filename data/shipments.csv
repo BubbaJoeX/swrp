@@ -3,3 +3,5 @@
 # allowed = quoted comma-separated profession commands
 name,model,preview_model,entities,price,amount,separate,price_separate,allowed,category
 E-11 Carbine,models/weapons/w_e11.mdl,models/weapons/w_e11.mdl,weapon_752_e11,1500,5,1,350,armsdealer,Carbines
+SE-14C,models/weapons/w_se14c.mdl,models/weapons/w_se14c.mdl,weapon_752_se14c,1500,5,1,350,armsdealer,Carbines
+Imperial Repeater,models/weapons/w_ihr.mdl,models/weapons/w_ihr.mdl,weapon_752_ihr,1500,5,1,350,armsdealer,Carbines

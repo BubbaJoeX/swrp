@@ -203,6 +203,9 @@ hook.Add( "PlayerCanPickupWeapon", "SWGRP_LicenseCheck", function( ply, wep )
 	if class == "weapon_physgun" or class == "gmod_tool" or class == "weapon_physcannon" then return end
 	if string.StartWith( class, "swgrp_" ) then return end
 
+	if ply.SWGRP_SkipLicensePickup == class then return true end
+	if SWGRP.IsGrantedWeapon and SWGRP.IsGrantedWeapon( ply, class ) then return true end
+
 	local job = SWGRP.GetJob( ply:Team() )
 	if job and ( job.hasLicense or job.stormtrooper or job.governor ) then return end
 	if ply:SWGRP_HasLicense() then return end

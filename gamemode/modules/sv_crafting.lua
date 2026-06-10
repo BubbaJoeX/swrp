@@ -44,6 +44,12 @@ function SWGRP.Crafting.Craft( ply, recipeId )
 		ply:GiveAmmo( recipe.giveAmmo.amount, recipe.giveAmmo.type, true )
 	end
 
+	if recipe.giveMaterials then
+		for mat, count in pairs( recipe.giveMaterials ) do
+			SWGRP.Materials.Add( ply, mat, count )
+		end
+	end
+
 	if recipe.heal then
 		ply:SetHealth( math.min( ply:GetMaxHealth(), ply:Health() + recipe.heal ) )
 	end

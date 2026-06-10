@@ -18,6 +18,7 @@ if SERVER then
 		"SWGRP_BuyEntity",
 		"SWGRP_BuyShipment",
 		"SWGRP_BuyAmmo",
+		"SWGRP_UseEnergyCell",
 		"SWGRP_SetJob",
 		"SWGRP_BuyVehicle",
 		"SWGRP_BuyFood",

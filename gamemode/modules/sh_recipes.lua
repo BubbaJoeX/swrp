@@ -24,7 +24,7 @@ SWGRP.RegisterRecipe( {
 	name = "Energy Cell",
 	id = "energy_cell",
 	materials = { metal = 2, chemical = 1 },
-	giveAmmo = { type = "pistol", amount = 24 },
+	giveMaterials = { energy_cell = 1 },
 	credits = 0,
 	xp = 25,
 	allowed = { TEAM_ARTISAN },

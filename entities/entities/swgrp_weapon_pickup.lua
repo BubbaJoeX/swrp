@@ -88,7 +88,7 @@ if SERVER then
 		if not IsValid( activator ) or not activator:IsPlayer() then return end
 
 		local class = self:GetWeaponClass()
-		if class == "" or not weapons.Get( class ) then
+		if class == "" or not ( weapons.Get( class ) or weapons.GetStored( class ) ) then
 			SWGRP.Notify( activator, "This weapon pickup is invalid." )
 			self:Remove()
 			return
@@ -101,7 +101,13 @@ if SERVER then
 			end
 			local swep = weapons.Get( class )
 			local label = swep and swep.PrintName or class
-			SWGRP.Notify( activator, "Equipped " .. label .. "." )
+			local ammoNote = ""
+			if SWGRP.Ammo and SWGRP.Ammo.IsEnergyWeapon( class ) then
+				local cells = SWGRP.Config and SWGRP.Config.ShipmentWeaponGrantCells or 2
+				local perCell = SWGRP.Ammo.RoundsPerCell()
+				ammoNote = string.format( " (%d rounds)", cells * perCell )
+			end
+			SWGRP.Notify( activator, "Equipped " .. label .. ammoNote .. "." )
 			self:Remove()
 		else
 			SWGRP.Notify( activator, "Couldn't equip that weapon." )

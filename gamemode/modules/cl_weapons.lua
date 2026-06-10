@@ -65,6 +65,41 @@ local function weaponSwitchBlocked()
 	return false
 end
 
+-- Let sandbox phys/grav gun keep mouse-wheel distance while dragging an object.
+local function physBeamOwnedBy( ply, class )
+	for _, beam in ipairs( ents.FindByClass( class ) ) do
+		if beam:GetOwner() == ply then return beam end
+	end
+	return nil
+end
+
+function WH.ShouldPassScrollToToolGun( ply )
+	if not IsValid( ply ) then return false end
+
+	local wep = ply:GetActiveWeapon()
+	if not IsValid( wep ) then return false end
+
+	local class = wep:GetClass()
+
+	if class == "weapon_physgun" and ply:KeyDown( IN_ATTACK ) then
+		if wep.HeldEntity and IsValid( wep.HeldEntity ) then return true end
+
+		local nwHeld = wep:GetNWEntity( "PhysgunTarget" )
+		if IsValid( nwHeld ) then return true end
+
+		nwHeld = wep:GetNWEntity( "Holding" )
+		if IsValid( nwHeld ) then return true end
+
+		if physBeamOwnedBy( ply, "physgun_beam" ) then return true end
+	end
+
+	if class == "weapon_physcannon" and ( ply:KeyDown( IN_ATTACK ) or ply:KeyDown( IN_ATTACK2 ) ) then
+		if physBeamOwnedBy( ply, "physcannon_beam" ) then return true end
+	end
+
+	return false
+end
+
 local function getWeaponSlotInfo( wep )
 	local class = wep:GetClass()
 	local stored = weapons.Get( class )
@@ -277,11 +312,11 @@ hook.Add( "PlayerBindPress", "SWGRP_WeaponSwitch", function( ply, bind, pressed 
 	local handled = false
 	local showStrip = false
 
-	if bind == "invnext" then
-		handled = WH.CycleWeapon( 1 )
-		showStrip = handled
-	elseif bind == "invprev" then
-		handled = WH.CycleWeapon( -1 )
+	if bind == "invnext" or bind == "invprev" then
+		if WH.ShouldPassScrollToToolGun( ply ) then return end
+
+		local direction = bind == "invnext" and 1 or -1
+		handled = WH.CycleWeapon( direction )
 		showStrip = handled
 	elseif bind == "lastinv" then
 		local weps = WH.GetSortedWeapons( ply )

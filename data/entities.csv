@@ -4,7 +4,6 @@ class,name,model,price,max,cmd,allowed,category
 swgrp_credit_harvester,Credit Press,models/starwars/syphadias/props/sw_tor/bioware_ea/items/harvesting/slicing/slicing_safeboxes_dial.mdl,1200,11,buyharvester,*,Commerce
 swgrp_ration_dispenser,Ration Terminal,models/bananakin/rp_daedalus_v1/cantina_console.mdl,200,2,buyration,"cantina,merchant",Health & Services
 swgrp_med_station,Medical Station,models/props/starwars/medical/health_droid.mdl,500,2,buymedstation,"medic,doctor",Health & Services
-swgrp_ammo_crate,Energy Cell,models/starwars/items/energy_cell.mdl,350,2,buyammocrate,"armsdealer,commando",Health & Services
 swgrp_armor_station,Armor Kiosk,models/starwars/items/shield_large.mdl,400,1,buyarmor,"artisan,commando",Health & Services
 swgrp_galactic_atm,Galactic Bank,models/kingpommes/emperors_tower/ph_props/palp_panel1/palp_panel1.mdl,300,2,buyatm,"merchant,governor,colonist",Commerce
 swgrp_mission_terminal,Mission Terminal,models/lordtrilobite/starwars/isd/imp_console_small01.mdl,500,1,buymissionterm,"governor,merchant",Commerce

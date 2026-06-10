@@ -491,9 +491,13 @@ end
 
 function SWGRP.Economy.BuyAmmo( ply, ammoName )
 	local data = SWGRP.AmmoTypes[ammoName]
-	if not data then return end
+	if not data then
+		SWGRP.Notify( ply, "That ammunition is unavailable." )
+		return
+	end
 
-	if not SWGRP.PlayerTeamAllowedPurchase( ply, data.allowed ) then
+	if not SWGRP.PlayerJobAllowedPurchase( ply, data.allowedcmds ) then
+		SWGRP.Notify( ply, "Your profession can't purchase that ammunition." )
 		return
 	end
 
@@ -502,7 +506,20 @@ function SWGRP.Economy.BuyAmmo( ply, ammoName )
 		return
 	end
 
-	ply:GiveAmmo( data.amountGiven, data.ammoType, true )
+	local amount = math.max( 1, data.amountGiven or 1 )
+	local cells = amount
+
+	if data.ammoType ~= "energy_cell" then
+		local perCell = SWGRP.Ammo and SWGRP.Ammo.RoundsPerCell() or 5
+		cells = math.max( 1, math.ceil( amount / perCell ) )
+	end
+
+	SWGRP.Materials.Add( ply, "energy_cell", cells )
+	SWGRP.Notify( ply, string.format(
+		"Purchased %d energy cell(s). Use LOAD CELL on the bottom-right energy panel.",
+		cells
+	) )
+
 	SWGRP.Hooks.Call( "SWGRPEntityPurchased", ply, data.name or ammoName, data.price )
 end
 

@@ -5,7 +5,7 @@
 SWGRP = SWGRP or {}
 SWGRP.Materials = SWGRP.Materials or {}
 
-SWGRP.Materials.Types = { "metal", "chemical", "fiber", "electronics" }
+SWGRP.Materials.Types = { "metal", "chemical", "fiber", "electronics", "energy_cell" }
 
 function SWGRP.Materials.Get( ply, matType )
 	ply.SWGRP_Materials = ply.SWGRP_Materials or {}

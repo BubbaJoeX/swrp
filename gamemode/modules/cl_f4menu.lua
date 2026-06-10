@@ -222,28 +222,33 @@ local function BuildShop( sheet, UI, frame )
 		shipCatalog:AutoSelectFirst()
 	end
 
-	-- Ammunition (preview)
+	-- Ammunition — purchase cells here; load them from the bottom-right energy panel
 	if table.Count( SWGRP.AmmoTypes ) > 0 then
 		local ammoCatalog = UI.CreateCatalogTab( sheet, "Ammunition", "icon16/bullet_add.png" )
+		local perCell = SWGRP.Config.AmmoRoundsPerEnergyCell or 5
 		for name, data in SortedPairsByMemberValue( SWGRP.AmmoTypes, "name" ) do
-		ammoCatalog:AddItem( {
-			name = data.name,
-			subtitle = data.category or "Ammunition",
-			listSub = SWGRP.FormatCredits( data.price ),
-			description = "Energy cells and ammunition packs.\nAmount: " .. ( data.amountGiven or 0 ),
-			priceText = "Cost: " .. SWGRP.FormatCredits( data.price ),
-			model = SWGRP.GetAmmoPreviewModel( data ),
-			color = UI.Colors.secondary,
-			actionText = "Purchase Ammo",
-			onAction = function()
-				net.Start( "SWGRP_BuyAmmo" )
-					net.WriteString( name )
-				net.SendToServer()
-			end,
+			local loadHint = "Load purchased cells from the energy panel (bottom-right)."
+			ammoCatalog:AddItem( {
+				name = data.name,
+				subtitle = data.category or "Ammunition",
+				listSub = SWGRP.FormatCredits( data.price ),
+				description = data.ammoType == "energy_cell"
+					and string.format( "Energy cells (%d rounds each).\nAmount: %d\n\n%s", perCell, data.amountGiven or 0, loadHint )
+					or "Ammunition packs.\nAmount: " .. ( data.amountGiven or 0 ),
+				priceText = "Cost: " .. SWGRP.FormatCredits( data.price ),
+				model = SWGRP.GetAmmoPreviewModel( data ),
+				color = UI.Colors.secondary,
+				actionText = "Purchase Ammo",
+				onAction = function()
+					net.Start( "SWGRP_BuyAmmo" )
+						net.WriteString( name )
+					net.SendToServer()
+				end,
 			} )
 		end
 		ammoCatalog:AutoSelectFirst()
 	end
+
 end
 
 --[[---------------------------------------------------------------------------

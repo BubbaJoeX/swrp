@@ -49,6 +49,8 @@ SWGRP.EntityLoader.LoadAll()
 
 Inc( "libraries/sh_content_loader.lua" )
 SWGRP.Content.LoadAll()
+Inc( "modules/sh_ammo.lua" )
+SWGRP.Ammo.PatchWeaponTables()
 Inc( "modules/sh_doorgroups.lua" )
 Inc( "modules/sh_recipes.lua" )
 Inc( "modules/sh_missions.lua" )

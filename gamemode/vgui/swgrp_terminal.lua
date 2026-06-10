@@ -903,9 +903,11 @@ if CLIENT then
 		if #HUD.Toasts == 0 then return end
 		HUD.Sync()
 
-		local scrW = ScrW()
-		local y = 118
+		local scrW, scrH = ScrW(), ScrH()
 		local now = CurTime()
+		local toastCount = #HUD.Toasts
+		-- Below lockdown banner when playing; above bottom HUD when a terminal is open.
+		local y = UI.IsTerminalOpen() and ( scrH - 28 - toastCount * 32 - 24 ) or 118
 
 		for i = #HUD.Toasts, 1, -1 do
 			local t = HUD.Toasts[i]
