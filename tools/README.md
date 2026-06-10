@@ -6,7 +6,19 @@ Matches assets referenced in SWGRP **CSV files** and **Lua scripts** against Wor
 
 - Python 3.8+ (no extra packages)
 
-## Quick start
+## `lint_jobs_csv.py`
+
+Validates `data/jobs.csv` and merged `gamemode/custom/data/jobs.csv` rows before you deploy or reload content.
+
+```powershell
+python tools/lint_jobs_csv.py
+```
+
+Checks: required header columns, unique `command` values, `allegiance` / `color` format, `models/` paths, known job `flags`, and stray leading/trailing `|` in pipe lists.
+
+Exit code `1` on errors (handy for CI). Exit code `0` prints `jobs.csv lint: OK (N job row(s))`.
+
+## Quick start (GMA scanner)
 
 1. Subscribe to / download the Workshop addons you want to evaluate (or copy `.gma` files into a folder).
 2. Point the tool at your Workshop content folder or any directory containing `.gma` files:

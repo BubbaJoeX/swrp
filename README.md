@@ -38,6 +38,7 @@ swgrp/
 │   └── install_loadscreen.ps1
 ├── tools/                    # Offline utilities
 │   ├── scan_gma_assets.py    # Match CSV/Lua assets to .gma Workshop addons
+│   ├── lint_jobs_csv.py      # Validate data/jobs.csv (+ custom overrides)
 │   └── README.md
 ├── data/                     # CSV content (master copies)
 │   ├── jobs.csv              # Professions
@@ -105,8 +106,8 @@ Most content is defined in plain CSV files under `swgrp/data/` and loaded at sta
 | `jobs.csv` | Professions | `name, command, category, allegiance, color, models, description, weapons, salary, max, admin, vote, flags` |
 | `entities.csv` | Purchasable structures | `class, name, model, price, max, cmd, allowed, category` |
 | `shipments.csv` | Weapon crates | `name, model, preview_model, entities, price, amount, separate, price_separate, allowed, category` |
-| `foods.csv` | Ration terminal consumables | `name, model, price, hunger, health, allowed, category` |
-| `spices.csv` | Spice terminal craftables | `name, model, price, hunger, health, allowed, category` |
+| `foods.csv` | Ration terminal craftables (physical pickup) | `name, model, price, hunger, health, allowed, category` |
+| `spices.csv` | Spice terminal craftables (physical pickup) | `name, model, price, hunger, health, allowed, category` |
 | `ammo.csv` | Ammunition | `name, ammo_type, model, price, amount, allowed, category` |
 | `vehicles.csv` | Vehicles | `name, model, class, script, price, allowed, category` |
 
@@ -116,16 +117,17 @@ Formatting rules:
 - **`color`** is `R G B` (space or comma separated).
 - **`flags`** is a space/comma list: `hobo cook medic doctor bountyhunter hasLicense governor officer stormtrooper commander chief whitelist disguise captain`.
 - Lines starting with `#` are comments. Reload at runtime (superadmin) with `swgrp_reloadcontent`.
+- Validate `jobs.csv` before deploy: `python tools/lint_jobs_csv.py` (see `tools/README.md`).
 
 Full column-by-column reference and examples: **[GUIDE.md → Authoring Content](GUIDE.md#authoring-content-csv)**.
 
-## Professions (19)
+## Professions (20)
 
 | Category | Professions |
 |----------|-------------|
 | Civilians | Colonist, Refugee, Merchant, Artisan, Entertainer, Cantina Operator, Doctor |
 | Combat Professions | Smuggler, Bounty Hunter, Commando, Arms Dealer, Combat Medic |
-| Imperial Forces | Stormtrooper Captain, Stormtrooper, Imperial Officer, Security Commander, Planetary Governor |
+| Imperial Forces | Stormtrooper Captain, Stormtrooper, Imperial Officer, Imperial Security Bureau, Imperial Royal Guard, The Emperor |
 | Rebel Alliance | Rebel Soldier, Rebel Pilot |
 
 > Professions ship in `data/jobs.csv` — edit that file (or add rows in `custom/data/jobs.csv`) to change the roster. The Lua `SWGRP.RegisterJob` API below is still available for advanced/scripted jobs.
@@ -153,6 +155,7 @@ SWGRP.RegisterJob("Example", {
     cook = true,               -- Food profession
     hobo = true,               -- Refugee class
     hasLicense = true,         -- Auto weapon permit
+    captain = true,            -- Stormtrooper captain tier
 })
 ```
 
@@ -162,7 +165,8 @@ SWGRP.RegisterJob("Example", {
 - **Credits (CR)** wallet with SQLite persistence
 - **Payday** salary system with configurable interval
 - **Imperial Tax** deducted from non-governor paychecks
-- **Credit drops** via `/dropcredits` or `/moneydrop`
+- **Credit transfers** via `/pay` or `/give` (hand credits to a targeted player)
+- **Credit drops** via `/dropcredits` or `/moneydrop` (max per drop: `swgrp_dropcreditlimit`, default 10000)
 - **Death penalty** — 10% credits dropped on death
 - **Credit Harvester** — passive income entity (SWG-themed money printer)
 
@@ -213,11 +217,18 @@ SWGRP.RegisterJob("Example", {
 - Level displayed on HUD and F4 status tab
 - Persisted in SQLite
 
-### Hunger System
+### Hunger & Food
 - Hunger depletes over time (refugees lose faster)
-- **Ration Dispenser** and cantina food restore hunger
+- **Ration Terminal** (`swgrp_ration_dispenser`) crafts physical **food pickups** (`swgrp_food`) — press **E** to eat
+- Same flow as spice: craft at terminal → pickup spawns in front of you → eat later or pocket it
+- `/eat` applies a small hunger bump without a food entity (emergency ration)
 - Low hunger causes damage; starvation possible
-- `/eat` to consume held rations
+
+### Refugee Junk Piles
+- Map spawns scavengable **junk piles** (`swgrp_junk_pile`) near player starts (ConVar `swgrp_junkpiles`)
+- **Refugees only** — press **E** to scavenge for credits, random food, or a rare SE-14C blaster
+- After scavenging, a **new pile falls from the sky** at a **random nearby location** (anti-camp)
+- Per-player scavenge cooldown (`swgrp_junkpile_player_cd`, default 30s)
 
 ### Missions
 - **Mission Terminal** entity and F4 Missions tab
@@ -254,7 +265,9 @@ SWGRP.RegisterJob("Example", {
 | `/g` | Profession group chat |
 | `/radio` `/channel` | Category radio |
 | `/broadcast` | Governor broadcast |
-| `/dropcredits [amt]` | Drop credits |
+| `/pay [amt]` | Hand credits to targeted player |
+| `/give [amt]` | Alias for `/pay` |
+| `/dropcredits [amt]` | Drop credits on the ground |
 | `/wanted [name] [reason]` | Mark wanted |
 | `/unwanted [name]` | Clear wanted |
 | `/warrant [name] [reason]` | Search warrant |
@@ -281,7 +294,7 @@ SWGRP.RegisterJob("Example", {
 | `/droppocket` | Open pocket menu |
 
 ### Pocket
-- **8-slot** inventory for weapons and SWGRP entities (shipments, spice, keypads, etc.)
+- **8-slot** inventory for weapons and SWGRP entities (shipments, spice, food, keypads, etc.)
 - **T** — toggle pocket menu · **Alt+T** — quick-store what you're aiming at
 - Drag-and-drop between slots; double-click a slot to drop
 - Full item state preserved (weapon ammo, shipment contents, harvester credits, etc.)
@@ -318,6 +331,12 @@ SWGRP.RegisterJob("Example", {
 | `swgrp_hungerenabled` | 1 | Enable hunger system |
 | `swgrp_hungerrate` | 1 | Hunger loss per tick (every 30s) |
 | `swgrp_missioncooldown` | 120 | Seconds between missions |
+| `swgrp_dropcreditlimit` | 10000 | Max credits per `/dropcredits` |
+| `swgrp_junkpiles` | 1 | Enable refugee junk pile map spawns |
+| `swgrp_junkpile_count` | 16 | Junk piles to spawn per map |
+| `swgrp_junkpile_drop_radius` | 720 | Max horizontal scatter when a pile respawns from the sky |
+| `swgrp_junkpile_player_cd` | 30 | Seconds between junk scavenges per player |
+| `swgrp_junkpile_food_chance` | 0.12 | Chance food drops instead of credits (after weapon roll) |
 | `swgrp_sandbox_tools` | 1 | Sandbox tools: 0=off, 1=everyone, 2=FAdmin privilege only |
 
 ## Map Setup
@@ -360,7 +379,7 @@ hook.Add("SWGRPMissionCompleted", "MyAddon", function(ply, mission, reward)
 end)
 ```
 
-Available hooks: `SWGRPCanChangeJob`, `SWGRPJobChanged`, `SWGRPPlayerPaid`, `SWGRPPlayerArrested`, `SWGRPPlayerUnarrested`, `SWGRPPlayerWanted`, `SWGRPPlayerBoughtDoor`, `SWGRPPlayerSoldDoor`, `SWGRPMissionCompleted`, `SWGRPMissionAccepted`, `SWGRPCraftedItem`, `SWGRPContrabandFound`, `SWGRPPlayerDeposited`, `SWGRPPlayerWithdrew`.
+Available hooks: `SWGRPCanChangeJob`, `SWGRPJobChanged`, `SWGRPPlayerPaid`, `SWGRPPlayerArrested`, `SWGRPPlayerUnarrested`, `SWGRPPlayerWanted`, `SWGRPPlayerBoughtDoor`, `SWGRPPlayerSoldDoor`, `SWGRPMissionCompleted`, `SWGRPMissionAccepted`, `SWGRPCraftedItem`, `SWGRPContrabandFound`, `SWGRPPlayerDeposited`, `SWGRPPlayerWithdrew`, `SWGRPFoodCrafted`, `SWGRPFoodConsumed`, `SWGRPSpiceCrafted`, `SWGRPSpiceConsumed`.
 
 ## Entities
 
@@ -368,7 +387,9 @@ Available hooks: `SWGRPCanChangeJob`, `SWGRPJobChanged`, `SWGRPPlayerPaid`, `SWG
 |-------|-------------|
 | `swgrp_dropped_credits` | Physical credit pickup |
 | `swgrp_credit_harvester` | Passive credit generator |
-| `swgrp_ration_dispenser` | Food/hunger restore |
+| `swgrp_ration_dispenser` | Ration crafting terminal |
+| `swgrp_food` | Crafted food pickup (press E to eat) |
+| `swgrp_junk_pile` | Refugee scavenging pile (map spawn) |
 | `swgrp_med_station` | Health and armor restore |
 | `swgrp_ammo_crate` | Ammunition resupply |
 | `swgrp_armor_station` | Armor repair |

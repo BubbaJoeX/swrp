@@ -223,6 +223,17 @@ Configure via the **Create Multiplayer Game** settings panel, or set ConVars in 
 | `swgrp_hungerenabled` | 1 | Enable the hunger system |
 | `swgrp_hungerrate` | 1 | Hunger lost per tick (tick = every 30s) |
 | `swgrp_missioncooldown` | 120 | Seconds between completing missions |
+| `swgrp_dropcreditlimit` | 10000 | Max credits per `/dropcredits` drop |
+| `swgrp_junkpiles` | 1 | Enable refugee junk pile map spawns |
+| `swgrp_junkpile_count` | 16 | Junk piles spawned per map |
+| `swgrp_junkpile_credit_min` | 10 | Min credits from a junk scavenge |
+| `swgrp_junkpile_credit_max` | 100 | Max credits from a junk scavenge |
+| `swgrp_junkpile_weapon_chance` | 0.06 | Chance to salvage the junk-pile weapon |
+| `swgrp_junkpile_weapon_class` | `weapon_752_se14c` | Weapon class for junk pile weapon roll |
+| `swgrp_junkpile_drop_height` | 520 | Sky-drop height when a pile respawns |
+| `swgrp_junkpile_drop_radius` | 720 | Max horizontal scatter for respawn drops |
+| `swgrp_junkpile_food_chance` | 0.12 | Food drop chance (after weapon roll fails) |
+| `swgrp_junkpile_player_cd` | 30 | Per-player seconds between junk scavenges |
 | `swgrp_sandbox_tools` | 1 | Sandbox tools: `0` off, `1` everyone (physgun/toolgun/gravgun), `2` FAdmin privilege only |
 
 Example `server.cfg` snippet:
@@ -263,7 +274,8 @@ Open **F4 → Professions**, pick a faction on the left rail (Neutral / Imperial
 ### Economy
 - You earn **salary** every payday (`swgrp_paydayinterval`). Non-governors pay **Imperial tax** if enabled.
 - Carry **wallet credits**; on death you drop ~10% as pickup-able credits.
-- `/give [amount]` hands credits to the player you're looking at. `/dropcredits [amount]` drops them on the ground.
+- `/pay [amount]` or `/give [amount]` hands credits to the player you're looking at (SWGRP command; overrides the engine `give` superadmin cheat).
+- `/dropcredits [amount]` drops credits on the ground (capped by `swgrp_dropcreditlimit`, default 10000).
 - The **Credit Harvester** structure generates passive income for its owner.
 
 ### Banking
@@ -297,10 +309,15 @@ Underworld roles (Smuggler, etc.) can acquire **contraband** (spice, illegal wea
 
 **Pocket** — 8-slot inventory for weapons and SWGRP entities. Press **T** for the menu, **Alt+T** to quick-store, or use `/pocket` / `/droppocket`. Drag between slots; double-click to drop. Only **your own** purchased/deployed entities can be pocketed (admins bypass ownership checks).
 
-**Spice** — craft at a **Spice Storage Terminal** (`swgrp_spice_terminal`); pickups spawn as world entities (`swgrp_spice`).
+**Spice** — craft at a **Spice Storage Terminal** (`swgrp_spice_terminal`); pickups spawn as world entities (`swgrp_spice`). Press **E** to consume.
+
+**Food** — same flow at a **Ration Terminal** (`swgrp_ration_dispenser`); crafts physical `swgrp_food` pickups. Press **E** to eat. Both can be **pocketed** and dropped later.
+
+### Refugee scavenging
+**Refugees** can scavenge map-spawned **junk piles** (`swgrp_junk_pile`) for credits, occasional food pickups, or a rare blaster salvage. After each scavenge the pile is removed and a **new one falls from the sky** at a **random nearby spot** (within `swgrp_junkpile_drop_radius`) so one location cannot be farmed. A per-player cooldown applies (`swgrp_junkpile_player_cd`). Toggle spawns with `swgrp_junkpiles`.
 
 ### Structures & ownership
-Purchased equipment (F4 **Equipment** tab, shipments, spice crafts, etc.) assigns an **owner**. Only that owner (or admins) may **physgun**, **grav gun**, **toolgun**, or **pocket** the entity. Sandbox-spawned props you place still get owner protection via `PlayerSpawnedProp`.
+Purchased equipment (F4 **Equipment** tab, shipments, spice/food crafts, etc.) assigns an **owner**. Only that owner (or admins) may **physgun**, **grav gun**, **toolgun**, or **pocket** the entity. Sandbox-spawned props you place still get owner protection via `PlayerSpawnedProp`. Physgun and toolgun **mouse wheel** scroll is passed through while dragging or using stools (e.g. SubMaterial) so SWGRP menus do not steal weapon cycling.
 
 ### Missions
 Accept from **F3 → Missions** or a **Mission Terminal** structure. Types include Courier, Elimination, Collection, Imperial Patrol, and Rebel Sabotage. Rewards: credits + profession XP + faction standing. One active mission at a time; cooldown set by `swgrp_missioncooldown`.
@@ -315,7 +332,7 @@ Three reputations — **Imperial**, **Rebel**, **Underworld** (−100…+100). A
 Working, missions, crafting, and paydays grant per-profession XP across 10 levels. Level shows on the HUD and Status tab and persists in SQLite.
 
 ### Hunger
-If enabled, hunger drains over time (Refugees faster). Eat with `/eat`, the **Ration Dispenser**, or cantina food. Starvation deals damage.
+If enabled, hunger drains over time (Refugees faster). Restore hunger by eating **food pickups** (`swgrp_food` — craft at a Ration Terminal, find while scavenging junk, or buy from cantina setups). Press **E** on the pickup. `/eat` applies a small emergency ration without a food entity. Starvation deals damage.
 
 ### Bounties
 Place a contract via `/hit [name] [price]` or **F3 → Bounties**. Bounty Hunters collect on the target's death.
@@ -337,6 +354,7 @@ General rules for every file:
 - **`allowed`** = quoted, comma-separated profession `command`s, or `*`/blank = everyone.
 - **`color`** = `R G B` (spaces or commas).
 - Reload at runtime as a superadmin: `swgrp_reloadcontent` (rebuilds catalogs and updates job models live).
+- Lint `jobs.csv` before committing: `python tools/lint_jobs_csv.py` (checks columns, duplicate commands, colors, flags, pipe lists).
 
 ### `jobs.csv`
 
@@ -429,25 +447,27 @@ Jedi Sentinel,sentinel,Combat Professions,REBEL,80 140 255,models/player/group03
 
 ### `foods.csv`
 
-Ration terminal consumables (instantly consumed on purchase at a **Ration Terminal**).
+Ration terminal craftables — same physical-pickup flow as spice.
 
 `name,model,price,hunger,health,allowed,category`
 
 | Column | Notes |
 |--------|-------|
 | `name` | Display name |
-| `model` | World/preview model |
-| `price` | Cost in credits |
-| `hunger` | Hunger restored |
-| `health` | HP restored |
+| `model` | World/preview model for `swgrp_food` |
+| `price` | Craft cost in credits |
+| `hunger` | Hunger restored when eaten (press E on pickup) |
+| `health` | HP restored when eaten |
 | `allowed` | Profession commands or `*` |
-| `category` | Grouping (Food, Drink, Snack, …) |
+| `category` | Grouping (Food, Drink, Snack, Scrap, …) |
+
+Craft at a **Ration Terminal** while standing nearby; a `swgrp_food` entity drops in front of you. Junk scavenging can also spawn random food from this list.
 
 ### `spices.csv`
 
 Spice terminal craftables (spawn a physical `swgrp_spice` pickup in-world).
 
-Same columns as `foods.csv`. Craft at a **Spice Storage Terminal** while standing nearby.
+Same columns as `foods.csv`. Craft at a **Spice Storage Terminal** while standing nearby; press **E** on the pickup to consume.
 
 ### Override example
 
@@ -570,7 +590,7 @@ hook.Add( "SWGRPPlayerPaid", "MyAddon", function( ply, salary, tax ) end )
 hook.Add( "SWGRPMissionCompleted", "MyAddon", function( ply, mission, reward ) end )
 ```
 
-Available hooks: `SWGRPCanChangeJob`, `SWGRPJobChanged`, `SWGRPPlayerPaid`, `SWGRPPlayerArrested`, `SWGRPPlayerUnarrested`, `SWGRPPlayerWanted`, `SWGRPPlayerBoughtDoor`, `SWGRPPlayerSoldDoor`, `SWGRPMissionCompleted`, `SWGRPMissionAccepted`, `SWGRPCraftedItem`, `SWGRPContrabandFound`, `SWGRPPlayerDeposited`, `SWGRPPlayerWithdrew`.
+Available hooks: `SWGRPCanChangeJob`, `SWGRPJobChanged`, `SWGRPPlayerPaid`, `SWGRPPlayerArrested`, `SWGRPPlayerUnarrested`, `SWGRPPlayerWanted`, `SWGRPPlayerBoughtDoor`, `SWGRPPlayerSoldDoor`, `SWGRPMissionCompleted`, `SWGRPMissionAccepted`, `SWGRPCraftedItem`, `SWGRPContrabandFound`, `SWGRPPlayerDeposited`, `SWGRPPlayerWithdrew`, `SWGRPFoodCrafted`, `SWGRPFoodConsumed`, `SWGRPSpiceCrafted`, `SWGRPSpiceConsumed`.
 
 ---
 
@@ -596,6 +616,7 @@ The custom model isn't mounted or precached. Ensure the model path in `jobs.csv`
 
 ### A profession/structure isn't appearing
 - Confirm the row has the required fields (`jobs.csv` needs both `name` and `command`; `entities.csv` needs `class` and `name`).
+- Run `python tools/lint_jobs_csv.py` to catch duplicate commands, bad colors, trailing `|` in model lists, and unknown flags.
 - Run `swgrp_reloadcontent` and watch the console line `[SWGRP] CSV content loaded: …` for the counts.
 - Check the server console for `Unknown profession in allowed list: …` — an `allowed` entry references a `command` that doesn't exist.
 
@@ -624,7 +645,7 @@ Register jail positions for the map (see [Map Setup](#map-setup)). Without them,
 
 **Can I use MySQL?** It's intentionally disabled; SWGRP uses local SQLite. The MySQLite layer is present but configured to fall back to SQLite.
 
-**How do I add a job without coding?** Add a row to `data/jobs.csv` (or `custom/data/jobs.csv`) and run `swgrp_reloadcontent`.
+**How do I add a job without coding?** Add a row to `data/jobs.csv` (or `custom/data/jobs.csv`), run `python tools/lint_jobs_csv.py`, then `swgrp_reloadcontent`.
 
 **How do I run a dedicated server?** Git-deploy `gamemodes/swgrp/`, create a Workshop collection for content, set `host_workshop_collection`, copy `deploy/workshop.lua.example` → `lua/autorun/server/workshop.lua`, and configure `deploy/server.cfg.example`. See [Dedicated Server Deployment](#dedicated-server-deployment).
 
