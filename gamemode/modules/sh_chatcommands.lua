@@ -118,42 +118,24 @@ SWGRP.RegisterChatCommand( "broadcast", {
 	end,
 })
 
-SWGRP.RegisterChatCommand( "give", {
+SWGRP.RegisterChatCommand( "pay", {
 	description = "Hand credits to the player you are looking at",
 	execute = function( ply, args )
-		local amount = tonumber( args[1] ) or 0
-		amount = math.floor( amount )
-		if amount <= 0 then
-			SWGRP.Notify( ply, "Usage: /give <amount> (while looking at a player)" )
-			return
-		end
+		SWGRP.Economy.PayCredits( ply, args[1] )
+	end,
+})
 
-		local target = ply:GetEyeTrace().Entity
-		if not IsValid( target ) or not target:IsPlayer() or target == ply then
-			SWGRP.Notify( ply, "Look at a player to give them credits." )
-			return
-		end
-
-		if ply:GetPos():DistToSqr( target:GetPos() ) > 40000 then -- 200 units
-			SWGRP.Notify( ply, "You are too far away." )
-			return
-		end
-
-		if SWGRP.Economy.GiveCredits( ply, target, amount ) then
-			SWGRP.Notify( ply, "Gave " .. SWGRP.FormatCredits( amount ) .. " to " .. target:Nick() .. "." )
-			SWGRP.Notify( target, "Received " .. SWGRP.FormatCredits( amount ) .. " from " .. ply:Nick() .. "." )
-			SWGRP.Log( "economy", ply:Nick() .. " gave " .. SWGRP.FormatCredits( amount ) .. " to " .. target:Nick() )
-		else
-			SWGRP.Notify( ply, SWGRP.Lang.cant_afford )
-		end
+SWGRP.RegisterChatCommand( "give", {
+	description = "Alias for /pay (hand credits to a player)",
+	execute = function( ply, args )
+		SWGRP.ChatCmds["pay"].execute( ply, args )
 	end,
 })
 
 SWGRP.RegisterChatCommand( "dropcredits", {
 	description = "Drop credits on the ground",
 	execute = function( ply, args )
-		local amount = tonumber( args[1] ) or 0
-		SWGRP.Economy.DropCredits( ply, amount )
+		SWGRP.Economy.DropCredits( ply, args[1] )
 	end,
 })
 

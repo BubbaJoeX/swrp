@@ -160,6 +160,10 @@ function SWGRP.Pocket.ItemLabel( item )
 		return SWGRP.Spices[state.spiceID].name
 	end
 
+	if item.class == "swgrp_food" and state.foodID and SWGRP.Foods and SWGRP.Foods[state.foodID] then
+		return SWGRP.Foods[state.foodID].name
+	end
+
 	if item.kind == "weapon" or weapons.GetStored( item.class ) then
 		local swep = weapons.Get( item.class )
 		if swep and swep.PrintName and swep.PrintName ~= "" then return swep.PrintName end
@@ -190,6 +194,11 @@ function SWGRP.Pocket.ItemModel( item )
 	if item.class == "swgrp_spice" and state.spiceID and SWGRP.Spices and SWGRP.Spices[state.spiceID] then
 		local spice = SWGRP.Spices[state.spiceID]
 		if spice.model and spice.model ~= "" then return spice.model end
+	end
+
+	if item.class == "swgrp_food" and state.foodID and SWGRP.Foods and SWGRP.Foods[state.foodID] then
+		local food = SWGRP.Foods[state.foodID]
+		if food.model and food.model ~= "" then return food.model end
 	end
 
 	if item.kind == "weapon" or weapons.GetStored( item.class ) then

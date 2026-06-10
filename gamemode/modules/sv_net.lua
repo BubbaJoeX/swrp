@@ -24,13 +24,13 @@ net.Receive( "SWGRP_BuyShipment", function( len, ply )
 end )
 
 net.Receive( "SWGRP_BuyAmmo", function( len, ply )
-	local name = net.ReadString()
+	local name = string.Trim( net.ReadString() or "" )
 	SWGRP.Economy.BuyAmmo( ply, name )
 end )
 
 net.Receive( "SWGRP_UseEnergyCell", function( _, ply )
-	if SWGRP.Ammo and SWGRP.Ammo.UseMaterialCell then
-		SWGRP.Ammo.UseMaterialCell( ply )
+	if SWGRP.Ammo and SWGRP.Ammo.ReloadFromCells then
+		SWGRP.Ammo.ReloadFromCells( ply )
 	end
 end )
 

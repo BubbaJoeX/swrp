@@ -63,6 +63,10 @@ function meta:SWGRP_IsBountyHunter()
 	return SWGRP.IsBountyHunter( self:Team() )
 end
 
+function meta:SWGRP_IsRefugee()
+	return SWGRP.IsRefugeeJob( self:Team() )
+end
+
 function meta:SWGRP_GetDoorCount()
 	return self.SWGRP_DoorCount or 0
 end
@@ -88,7 +92,13 @@ function meta:SWGRP_GetProfLevel()
 end
 
 function meta:SWGRP_GetMaterial( matType )
-	return self:GetNWInt( "SWGRP_Mat_" .. matType, 0 )
+	if SWGRP.Materials and SWGRP.Materials.ReadNW then
+		return SWGRP.Materials.ReadNW( self, matType )
+	end
+	local key = "SWGRP_Mat_" .. matType
+	local n = self:GetNW2Int( key, -1 )
+	if n >= 0 then return n end
+	return self:GetNWInt( key, 0 )
 end
 
 function meta:SWGRP_GetContrabandCount()

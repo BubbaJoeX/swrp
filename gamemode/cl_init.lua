@@ -36,5 +36,6 @@ Inc( "modules/cl_lockpick.lua" )
 Inc( "modules/cl_advert.lua" )
 Inc( "modules/cl_pocket.lua" )
 Inc( "modules/cl_admin.lua" )
+Inc( "modules/cl_chatcommands.lua" )
 
 print( "[SWGRP] Client modules loaded." )

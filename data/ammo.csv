@@ -1,4 +1,4 @@
 # name,ammo_type,model,price,amount,allowed,category
-# ammo_type = GMod ammo name, or energy_cell for inventory cells (buy here, load via bottom-right panel)
+# ammo_type = GMod ammo name, or energy_cell for inventory cells (buy here, press R to load)
 name,ammo_type,model,price,amount,allowed,category
 Energy Cell,energy_cell,models/starwars/items/energy_cell.mdl,75,1,armsdealer,Ammunition

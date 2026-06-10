@@ -204,6 +204,11 @@ function SWGRP.IsGovernor( teamId )
 	return job and job.governor
 end
 
+function SWGRP.IsRefugeeJob( teamId )
+	local job = SWGRP.GetJob( teamId )
+	return job and ( job.hobo or string.lower( job.command or "" ) == "refugee" )
+end
+
 function SWGRP.FormatCredits( amount )
 	return string.Comma( math.floor( amount ) ) .. " " .. ( SWGRP.Config.CurrencySymbol or "CR" )
 end

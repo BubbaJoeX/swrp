@@ -315,6 +315,13 @@ SWGRP.Pocket.EntityCapture = {
 			spiceID = ent:GetSpiceID(),
 		}
 	end,
+
+	swgrp_food = function( ent )
+		return {
+			model  = ent:GetModel(),
+			foodID = ent:GetFoodID(),
+		}
+	end,
 }
 
 SWGRP.Pocket.EntityRestore = {
@@ -360,6 +367,12 @@ SWGRP.Pocket.EntityRestore = {
 	swgrp_spice = function( ent, state )
 		if state.spiceID and ent.SetSpice then
 			ent:SetSpice( state.spiceID )
+		end
+	end,
+
+	swgrp_food = function( ent, state )
+		if state.foodID and ent.SetFood then
+			ent:SetFood( state.foodID )
 		end
 	end,
 }
@@ -607,6 +620,9 @@ local function itemLabel( item )
 	end
 	if item.class == "swgrp_spice" and state.spiceID and SWGRP.Spices and SWGRP.Spices[state.spiceID] then
 		return SWGRP.Spices[state.spiceID].name
+	end
+	if item.class == "swgrp_food" and state.foodID and SWGRP.Foods and SWGRP.Foods[state.foodID] then
+		return SWGRP.Foods[state.foodID].name
 	end
 	if item.kind == "weapon" then
 		local swep = weapons.Get( item.class )

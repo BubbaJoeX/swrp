@@ -37,7 +37,8 @@ function SWGRP.OpenMOTD()
 			<li><b>/pm [name] [msg]</b> - Private message</li>
 			<li><b>/yell</b> - Yell to nearby players</li>
 			<li><b>/whisper</b> - Whisper to nearby players</li>
-			<li><b>/dropcredits [amount]</b> - Drop credits</li>
+			<li><b>/pay [amount]</b> - Hand credits to player you're looking at</li>
+			<li><b>/dropcredits [amount]</b> - Drop credits on the ground</li>
 			<li><b>/wanted [name] [reason]</b> - Mark wanted (Imperial Security)</li>
 			<li><b>/warrant [name] [reason]</b> - Search warrant</li>
 			<li><b>/hit [name] [price]</b> - Place bounty contract</li>

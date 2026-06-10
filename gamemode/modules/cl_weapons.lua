@@ -65,7 +65,7 @@ local function weaponSwitchBlocked()
 	return false
 end
 
--- Let sandbox phys/grav gun keep mouse-wheel distance while dragging an object.
+-- Let sandbox phys/grav/tool gun keep mouse-wheel bindings while in use.
 local function physBeamOwnedBy( ply, class )
 	for _, beam in ipairs( ents.FindByClass( class ) ) do
 		if beam:GetOwner() == ply then return beam end
@@ -95,6 +95,12 @@ function WH.ShouldPassScrollToToolGun( ply )
 
 	if class == "weapon_physcannon" and ( ply:KeyDown( IN_ATTACK ) or ply:KeyDown( IN_ATTACK2 ) ) then
 		if physBeamOwnedBy( ply, "physcannon_beam" ) then return true end
+	end
+
+	-- Toolgun stools (material, submaterial, rope, etc.) use the mouse wheel
+	-- without holding attack — keep scroll for the active stool, not weapon HUD.
+	if class == "gmod_tool" then
+		return true
 	end
 
 	return false

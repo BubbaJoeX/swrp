@@ -1,15 +1,9 @@
 --[[---------------------------------------------------------------------------
-    Energy panel — bottom-right HUD to load purchased cells into your blaster
-    Buy cells from F4 → Ammunition tab.
+    Energy panel — bottom-right HUD (buy cells in F4, press R to load)
 ---------------------------------------------------------------------------]]
 
 SWGRP = SWGRP or {}
 SWGRP.AmmoHUD = SWGRP.AmmoHUD or {}
-
-local AH = SWGRP.AmmoHUD
-local BTN_H = 22
-local PANEL_PAD = 12
-local BAR_H = 8
 
 hook.Add( "InitPostEntity", "SWGRP_ClientPatchWeaponAmmo", function()
 	SWGRP.Ammo.PatchWeaponTables()
@@ -27,34 +21,14 @@ local function hudBlocked()
 	return false
 end
 
-local function pointInRect( mx, my, rect )
-	return mx >= rect.x and mx <= rect.x + rect.w and my >= rect.y and my <= rect.y + rect.h
-end
-
-local function drawButton( HUD, rect, text, enabled, hovered, accent, secondary )
-	local bg = enabled and ( hovered and Color( accent.r, accent.g, accent.b, 90 ) or Color( 0, 0, 0, 170 ) )
-		or Color( 0, 0, 0, 110 )
-	draw.RoundedBox( 4, rect.x, rect.y, rect.w, rect.h, bg )
-	surface.SetDrawColor( enabled and accent or secondary )
-	surface.DrawOutlinedRect( rect.x, rect.y, rect.w, rect.h, 1 )
-	local col = enabled and Color( 245, 245, 245 ) or Color( 140, 140, 140 )
-	HUD.TextShadow( text, "SWGRP_HUD_Small", rect.x + rect.w / 2, rect.y + rect.h / 2, col, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER )
-end
-
 hook.Add( "HUDPaint", "SWGRP_AmmoHUD", function()
 	if hudBlocked() then return end
 
 	local ply = LocalPlayer()
-	if not IsValid( ply ) or not ply:Alive() then
-		AH.Layout = nil
-		return
-	end
+	if not IsValid( ply ) or not ply:Alive() then return end
 
 	local state = SWGRP.Ammo.GetHUDState( ply )
-	if not state then
-		AH.Layout = nil
-		return
-	end
+	if not state then return end
 
 	local UI = SWGRP.UI
 	if not UI or not UI.HUD then return end
@@ -64,24 +38,15 @@ hook.Add( "HUDPaint", "SWGRP_AmmoHUD", function()
 
 	local scrW, scrH = ScrW(), ScrH()
 	local pw = 220
-	local ph = state.weapon and ( 130 + PANEL_PAD ) or ( 98 + PANEL_PAD )
+	local ph = state.weapon and 118 or 88
 	local px = scrW - pw - 18
 	local py = scrH - ph - 18
-	local mx, my = gui.MousePos()
 
 	local primary = UI.Colors.primary
 	local secondary = UI.Colors.secondary
 	local accent = UI.Colors.accent
 	local danger = UI.Colors.danger or Color( 255, 60, 60 )
 	local perCell = state.roundsPerCell
-
-	AH.Layout = {
-		x = px,
-		y = py,
-		w = pw,
-		h = ph,
-		loadBtn = nil,
-	}
 
 	HUD.DrawPanel( px, py, pw, ph, 215 )
 	HUD.DrawHeader( px, py, pw, "ENERGY" )
@@ -116,8 +81,8 @@ hook.Add( "HUDPaint", "SWGRP_AmmoHUD", function()
 
 		local barW = pw - 24
 		local barFill = w.outOfAmmo and danger or meterCol
-		HUD.DrawStatBar( px + 12, cy, barW, BAR_H, w.meterFrac, barFill, "" )
-		cy = cy + BAR_H + 10
+		HUD.DrawStatBar( px + 12, cy, barW, 8, w.meterFrac, barFill, "" )
+		cy = cy + 18
 	else
 		HUD.TextShadow( "Equip a blaster to load cells.", "SWGRP_HUD_Small", px + 12, cy, secondary, TEXT_ALIGN_LEFT )
 		cy = cy + 28
@@ -132,30 +97,11 @@ hook.Add( "HUDPaint", "SWGRP_AmmoHUD", function()
 		accent,
 		TEXT_ALIGN_LEFT
 	)
-	cy = cy + 16
+	cy = cy + 14
 
-	local loadRect = { x = px + 12, y = cy, w = pw - 24, h = BTN_H }
-	local loadHovered = pointInRect( mx, my, loadRect )
-	local loadLabel = state.canLoad
-		and string.format( "LOAD CELL  (+%d rnd)", perCell )
-		or ( state.cells > 0 and "LOAD CELL" or "NO CELLS — BUY IN F4" )
-
-	drawButton( HUD, loadRect, loadLabel, state.canLoad, loadHovered, accent, secondary )
-	AH.Layout.loadBtn = loadRect
-end )
-
-hook.Add( "PlayerButtonDown", "SWGRP_AmmoHUDClick", function( ply, button )
-	if button ~= MOUSE_LEFT or ply ~= LocalPlayer() then return end
-	if hudBlocked() or gui.IsConsoleVisible() or gui.IsGameUIVisible() then return end
-
-	local layout = AH.Layout
-	if not layout or not layout.loadBtn then return end
-
-	local mx, my = gui.MousePos()
-	if not pointInRect( mx, my, layout ) then return end
-
-	if pointInRect( mx, my, layout.loadBtn ) then
-		net.Start( "SWGRP_UseEnergyCell" )
-		net.SendToServer()
-	end
+	local hintCol = state.canLoad and secondary or Color( 140, 140, 140 )
+	local hint = state.canLoad
+		and string.format( "R — load cell (+%d rnd)", perCell )
+		or ( state.cells > 0 and "R — load cell" or "NO CELLS — BUY IN F4" )
+	HUD.TextShadow( hint, "SWGRP_HUD_Small", px + 12, cy, hintCol, TEXT_ALIGN_LEFT )
 end )

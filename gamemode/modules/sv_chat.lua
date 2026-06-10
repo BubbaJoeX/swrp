@@ -3,7 +3,7 @@
 ---------------------------------------------------------------------------]]
 
 function SWGRP.ProcessChat( ply, text, teamChat )
-	if not IsValid( ply ) then return "" end
+	if not IsValid( ply ) then return end
 	if string.sub( text, 1, 1 ) ~= "/" then return end
 
 	local args = SWGRP.Util.SplitArgs( string.sub( text, 2 ) )
@@ -15,10 +15,10 @@ function SWGRP.ProcessChat( ply, text, teamChat )
 		data.execute( ply, args )
 		return ""
 	end
-
-	return ""
 end
 
-hook.Add( "PlayerSay", "SWGRP_ChatCommands", function( ply, text, teamChat )
+local function SWGRP_OnPlayerSay( ply, text, teamChat )
 	return SWGRP.ProcessChat( ply, text, teamChat )
-end )
+end
+
+hook.Add( "PlayerSay", "SWGRP_ChatCommands", SWGRP_OnPlayerSay, HOOK_HIGH or -1 )

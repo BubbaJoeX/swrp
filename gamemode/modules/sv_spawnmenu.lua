@@ -2,9 +2,14 @@
     Q Menu spawn restrictions for non-admins
 ---------------------------------------------------------------------------]]
 
-local Allow = SWGRP.SpawnAllowlist
+local function SpawnAllowlist()
+	return SWGRP.SpawnAllowlist
+end
 
 local function BlockSpawn( ply, category, id )
+	local Allow = SpawnAllowlist()
+	if not Allow then return end
+
 	if category == "weapons" and Allow.CanBypassWeapons( ply ) then return end
 	if category ~= "weapons" and Allow.CanBypass( ply ) then return end
 	if Allow.IsAllowed( ply, category, id ) then return end
@@ -33,6 +38,9 @@ hook.Add( "PlayerSpawnRagdoll", "SWGRP_SpawnAllowlist", function( ply, model )
 end )
 
 hook.Add( "PlayerSpawnVehicle", "SWGRP_SpawnAllowlist", function( ply, model, vname )
+	local Allow = SpawnAllowlist()
+	if not Allow then return end
+
 	if Allow.IsAllowed( ply, "vehicles", vname ) then return end
 	if Allow.IsAllowed( ply, "vehicles", model ) then return end
 	return BlockSpawn( ply, "vehicles", vname or model )

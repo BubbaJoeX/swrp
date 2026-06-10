@@ -139,6 +139,9 @@ end
 
 function SWGRP.Ammo.GetCellCount( ply )
 	if not IsValid( ply ) then return 0 end
+	if SWGRP.Materials and SWGRP.Materials.ReadNW then
+		return SWGRP.Materials.ReadNW( ply, "energy_cell" )
+	end
 	return ply:SWGRP_GetMaterial( "energy_cell" )
 end
 

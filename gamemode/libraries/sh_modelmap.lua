@@ -41,7 +41,10 @@ SWGRP.ModelMap.Entities = {
 	swgrp_holo_sign         = "models/squiddy/hologram_01.mdl",
 	swgrp_shipment          = "models/cw_furnitures11/cw_furnitures11.mdl",
 	swgrp_hovercrate        = "models/kingpommes/emperors_tower/imp_crates/imp_crate_single_base_static.mdl",
+	swgrp_junk_pile         = "models/props_junk/garbage_bag_01a.mdl",
 }
+
+SWGRP.ModelMap.Weapons["weapon_752_se14c"] = "models/weapons/w_se14c.mdl"
 
 function SWGRP.ModelMap.Resolve( modelPath, fallback )
 	if not modelPath or modelPath == "" then

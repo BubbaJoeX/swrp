@@ -96,16 +96,11 @@ function ES.SpawnAt( ply, kind, id )
 			return
 		end
 	elseif kind == "food" then
-		local food = SWGRP.Foods[tonumber( id )]
-		if not food then return end
-		ent = ents.Create( "prop_physics" )
-		if not IsValid( ent ) then return end
-		ent:SetModel( food.model or "models/props_junk/garbage_bag_01a.mdl" )
-		ent:SetPos( pos )
-		ent:SetAngles( ang )
-		ent:Spawn()
-		ent.SWGRP_FoodId = tonumber( id )
-		ent.SWGRP_FoodName = food.name
+		ent = SWGRP.Economy.SpawnFoodPickup( ply, tonumber( id ), pos, ang )
+		if not IsValid( ent ) then
+			SWGRP.Notify( ply, "Failed to spawn food pickup." )
+			return
+		end
 		SWGRP.Economy.AlignBottomToGround( ent, pos, ang )
 	elseif kind == "spice" then
 		ent = ents.Create( "swgrp_spice" )

@@ -25,7 +25,7 @@ C.DoorCost           = 100
 C.VehicleCost        = 1000
 C.MinPrice           = 50
 C.MaxPrice           = 50000
-C.DropCreditLimit    = 5000
+C.DropCreditLimit    = CreateConVar( "swgrp_dropcreditlimit", "10000", FCVAR_ARCHIVE + FCVAR_REPLICATED )
 C.MaxCreditHarvesters = 2
 
 -- Government
@@ -92,6 +92,18 @@ C.MaxMaterials       = 99
 -- Energy cell ammunition (blaster weapons)
 C.AmmoRoundsPerEnergyCell   = 5
 C.ShipmentWeaponGrantCells  = 2
+
+-- Refugee junk piles (map spawns)
+C.JunkPilesEnabled          = CreateConVar( "swgrp_junkpiles", "1", FCVAR_ARCHIVE + FCVAR_REPLICATED )
+C.JunkPileCount             = CreateConVar( "swgrp_junkpile_count", "16", FCVAR_ARCHIVE + FCVAR_REPLICATED )
+C.JunkPileCreditMin         = CreateConVar( "swgrp_junkpile_credit_min", "10", FCVAR_ARCHIVE + FCVAR_REPLICATED )
+C.JunkPileCreditMax         = CreateConVar( "swgrp_junkpile_credit_max", "100", FCVAR_ARCHIVE + FCVAR_REPLICATED )
+C.JunkPileWeaponChance      = CreateConVar( "swgrp_junkpile_weapon_chance", "0.06", FCVAR_ARCHIVE + FCVAR_REPLICATED )
+C.JunkPileWeaponClass       = CreateConVar( "swgrp_junkpile_weapon_class", "weapon_752_se14c", FCVAR_ARCHIVE + FCVAR_REPLICATED )
+C.JunkPileDropHeight        = CreateConVar( "swgrp_junkpile_drop_height", "520", FCVAR_ARCHIVE + FCVAR_REPLICATED )
+C.JunkPileDropRadius        = CreateConVar( "swgrp_junkpile_drop_radius", "720", FCVAR_ARCHIVE + FCVAR_REPLICATED )
+C.JunkPileFoodChance        = CreateConVar( "swgrp_junkpile_food_chance", "0.12", FCVAR_ARCHIVE + FCVAR_REPLICATED )
+C.JunkPilePlayerCooldown    = CreateConVar( "swgrp_junkpile_player_cd", "30", FCVAR_ARCHIVE + FCVAR_REPLICATED )
 
 -- Contraband
 C.ScanRange          = 200

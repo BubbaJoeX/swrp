@@ -38,7 +38,7 @@ if CLIENT then
 	function ENT:Draw()
 		self:DrawModel()
 		if SWGRP.UI and SWGRP.UI.DrawWorldLabel then
-			SWGRP.UI.DrawWorldLabel( self, "RATION TERMINAL", "Press E to buy food", SWGRP.UI.Colors.accent )
+			SWGRP.UI.DrawWorldLabel( self, "RATION TERMINAL", "Press E to craft rations", SWGRP.UI.Colors.accent )
 		end
 	end
 
@@ -80,11 +80,11 @@ if CLIENT then
 				name        = food.name,
 				subtitle    = food.category or "Rations",
 				listSub     = SWGRP.FormatCredits( food.price ),
-				description = restore .. ".\nConsumed immediately on purchase.",
-				priceText   = "Cost: " .. SWGRP.FormatCredits( food.price ),
+				description = restore .. ".\nCrafted as a physical item that drops in front of you. Press E to eat.",
+				priceText   = "Craft cost: " .. SWGRP.FormatCredits( food.price ),
 				model       = food.model,
 				color       = UI.Colors.accent,
-				actionText  = "Purchase",
+				actionText  = "Craft",
 				onAction    = function()
 					net.Start( "SWGRP_BuyFood" )
 						net.WriteUInt( id, 8 )

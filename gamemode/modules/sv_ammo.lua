@@ -78,7 +78,7 @@ end
 
 function SWGRP.Ammo.EnsureReserveFromCells( ply, wep )
 	if not IsValid( ply ) or not IsValid( wep ) then return 0 end
-	if not SWGRP.Ammo.UsesEnergyCells( wep:GetClass() ) then return 0 end
+	if not SWGRP.Ammo.WeaponUsesEnergyCells( wep ) then return 0 end
 
 	local maxClip = wep:GetMaxClip1()
 	if not maxClip or maxClip <= 0 then return 0 end
@@ -138,11 +138,13 @@ function SWGRP.Ammo.UseDeployedCell( ply )
 	return SWGRP.Ammo.UseWorldCell( ply )
 end
 
-function SWGRP.Ammo.UseMaterialCell( ply, classFilter )
+function SWGRP.Ammo.UseMaterialCell( ply, classFilter, silent )
 	if not IsValid( ply ) then return false end
 
 	if SWGRP.Materials.Get( ply, "energy_cell" ) < 1 then
-		SWGRP.Notify( ply, "You have no energy cells." )
+		if not silent then
+			SWGRP.Notify( ply, "You have no energy cells." )
+		end
 		return false
 	end
 
@@ -151,16 +153,52 @@ function SWGRP.Ammo.UseMaterialCell( ply, classFilter )
 	local given = SWGRP.Ammo.GiveCellsAsRounds( ply, 1, classFilter or SWGRP_AmmoActiveBlasterClass( ply ) )
 	if given <= 0 then
 		SWGRP.Materials.Add( ply, "energy_cell", 1 )
-		SWGRP.Notify( ply, "Equip a blaster to load an energy cell." )
+		if not silent then
+			SWGRP.Notify( ply, "Equip a blaster to load an energy cell." )
+		end
 		return false
 	end
 
-	SWGRP.Notify( ply, string.format(
-		"Loaded %d rounds from energy cell (%d per cell).",
-		given,
-		SWGRP.Ammo.RoundsPerCell()
-	) )
+	if not silent then
+		SWGRP.Notify( ply, string.format(
+			"Loaded %d rounds from energy cell (%d per cell).",
+			given,
+			SWGRP.Ammo.RoundsPerCell()
+		) )
+	end
 	return true
+end
+
+function SWGRP.Ammo.ReloadFromCells( ply )
+	if not IsValid( ply ) then return false end
+
+	local wep = ply:GetActiveWeapon()
+	if not IsValid( wep ) or not SWGRP.Ammo.WeaponUsesEnergyCells( wep ) then return false end
+
+	local maxClip = wep:GetMaxClip1()
+	if maxClip > 0 and wep:Clip1() >= maxClip then return false end
+
+	local hadCells = SWGRP.Materials.Get( ply, "energy_cell" ) > 0
+	local loaded = SWGRP.Ammo.UseMaterialCell( ply, wep:GetClass(), true )
+
+	if not loaded and hadCells then
+		return false
+	end
+
+	if not loaded and not hadCells then
+		SWGRP.Notify( ply, "No energy cells — buy ammunition in F4." )
+		return false
+	end
+
+	if IsValid( wep ) and wep.Reload then
+		timer.Simple( 0, function()
+			if IsValid( ply ) and IsValid( wep ) and ply:GetActiveWeapon() == wep then
+				wep:Reload()
+			end
+		end )
+	end
+
+	return loaded
 end
 
 hook.Add( "Initialize", "SWGRP_RegisterEnergyAmmo", function()
@@ -194,9 +232,7 @@ end )
 
 hook.Add( "KeyPress", "SWGRP_EnergyAmmoReload", function( ply, key )
 	if key ~= IN_RELOAD then return end
-	local wep = ply:GetActiveWeapon()
-	if not IsValid( wep ) or not SWGRP.Ammo.WeaponUsesEnergyCells( wep ) then return end
-	SWGRP.Ammo.EnsureReserveFromCells( ply, wep )
+	SWGRP.Ammo.ReloadFromCells( ply )
 end )
 
 hook.Add( "StartCommand", "SWGRP_EnergyAmmoBlockFire", function( ply, cmd )

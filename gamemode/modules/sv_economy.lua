@@ -37,12 +37,59 @@ function SWGRP.Economy.Payday()
 	if SWGRP.Persistence then SWGRP.Persistence.SaveWorld() end
 end
 
-function SWGRP.Economy.DropCredits( ply, amount )
-	amount = math.Clamp( math.floor( amount ), 1, SWGRP.Config.DropCreditLimit )
+function SWGRP.Economy.GetDropCreditLimit()
+	local cv = SWGRP.Config.DropCreditLimit
+	if cv and cv.GetInt then
+		return math.max( 1, cv:GetInt() )
+	end
+	return math.max( 1, tonumber( cv ) or 10000 )
+end
 
-	if not ply:SWGRP_TakeCredits( amount ) then
+function SWGRP.Economy.PayCredits( ply, amount )
+	amount = math.floor( tonumber( amount ) or 0 )
+	if amount <= 0 then
+		SWGRP.Notify( ply, "Usage: /pay <amount> (while looking at a player)" )
+		return false
+	end
+
+	local target = ply:GetEyeTrace().Entity
+	if not IsValid( target ) or not target:IsPlayer() or target == ply then
+		SWGRP.Notify( ply, "Look at a player to give them credits." )
+		return false
+	end
+
+	if ply:GetPos():DistToSqr( target:GetPos() ) > 40000 then -- 200 units
+		SWGRP.Notify( ply, "You are too far away." )
+		return false
+	end
+
+	if not SWGRP.Economy.GiveCredits( ply, target, amount ) then
 		SWGRP.Notify( ply, SWGRP.Lang.cant_afford )
-		return
+		return false
+	end
+
+	SWGRP.Notify( ply, "Gave " .. SWGRP.FormatCredits( amount ) .. " to " .. target:Nick() .. "." )
+	SWGRP.Notify( target, "Received " .. SWGRP.FormatCredits( amount ) .. " from " .. ply:Nick() .. "." )
+	SWGRP.Log( "economy", ply:Nick() .. " gave " .. SWGRP.FormatCredits( amount ) .. " to " .. target:Nick() )
+	return true
+end
+
+function SWGRP.Economy.DropCredits( ply, amount )
+	local requested = math.floor( tonumber( amount ) or 0 )
+	if requested <= 0 then
+		SWGRP.Notify( ply, "Usage: /dropcredits <amount>" )
+		return false
+	end
+
+	local limit = SWGRP.Economy.GetDropCreditLimit()
+	local dropAmount = math.Clamp( requested, 1, limit )
+	if requested > limit then
+		SWGRP.Notify( ply, "Maximum drop is " .. SWGRP.FormatCredits( limit ) .. " (dropping " .. SWGRP.FormatCredits( dropAmount ) .. ")." )
+	end
+
+	if not ply:SWGRP_TakeCredits( dropAmount ) then
+		SWGRP.Notify( ply, SWGRP.Lang.cant_afford )
+		return false
 	end
 
 	local tr = ply:GetEyeTrace()
@@ -50,14 +97,17 @@ function SWGRP.Economy.DropCredits( ply, amount )
 
 	local ent = ents.Create( "swgrp_dropped_credits" )
 	if not IsValid( ent ) then
-		ply:SWGRP_AddCredits( amount )
-		return
+		ply:SWGRP_AddCredits( dropAmount )
+		SWGRP.Notify( ply, "Could not drop credits right now." )
+		return false
 	end
 
 	ent:SetPos( pos )
-	ent:SetCredits( amount )
+	ent:SetCredits( dropAmount )
 	ent:Spawn()
 	ent.SWGRP_DroppedBy = ply
+	SWGRP.Notify( ply, "Dropped " .. SWGRP.FormatCredits( dropAmount ) .. "." )
+	return true
 end
 
 function SWGRP.Economy.GiveCredits( from, to, amount )
@@ -295,6 +345,31 @@ function SWGRP.Economy.SpawnShipmentCrate( ply, ship, separate, state )
 	return ent
 end
 
+function SWGRP.Economy.SpawnFoodPickup( ply, foodId, pos, ang )
+	local food = SWGRP.Foods[foodId]
+	if not food then return nil end
+
+	local ent = ents.Create( "swgrp_food" )
+	if not IsValid( ent ) then return nil end
+
+	pos = pos or vector_origin
+	ang = ang or Angle( 0, 0, 0 )
+
+	ent:SetPos( pos )
+	ent:SetAngles( ang )
+	ent:Spawn()
+	ent:Activate()
+	ent:SetFood( foodId )
+
+	if IsValid( ply ) and SWGRP.Ownership and SWGRP.Ownership.SetOwner then
+		SWGRP.Ownership.SetOwner( ent, ply )
+	end
+
+	return ent
+end
+
+-- Unlike instant consumables, rations are crafted at a terminal and spawn a
+-- physical pickup that can be carried, pocketed, or eaten later with E.
 function SWGRP.Economy.BuyFood( ply, foodId )
 	if not IsValid( ply ) then return end
 
@@ -309,8 +384,8 @@ function SWGRP.Economy.BuyFood( ply, foodId )
 		return
 	end
 
-	-- Must be standing at a ration terminal to purchase (prevents buying from
-	-- anywhere by replaying the net message).
+	-- Must be standing at a ration terminal (prevents crafting anywhere by
+	-- replaying the net message).
 	local near = false
 	for _, ent in ipairs( ents.FindInSphere( ply:GetPos(), 200 ) ) do
 		if IsValid( ent ) and ent:GetClass() == "swgrp_ration_dispenser" then
@@ -329,16 +404,18 @@ function SWGRP.Economy.BuyFood( ply, foodId )
 		return
 	end
 
-	if SWGRP.Hunger and ( food.hunger or 0 ) > 0 then
-		SWGRP.Hunger.Add( ply, food.hunger )
-	end
-	if ( food.health or 0 ) > 0 then
-		ply:SetHealth( math.min( ply:GetMaxHealth(), ply:Health() + food.health ) )
+	local pos, ang = SWGRP.Economy.GroundSpawn( ply )
+	local ent = SWGRP.Economy.SpawnFoodPickup( ply, foodId, pos, ang )
+	if not IsValid( ent ) then
+		ply:SWGRP_AddCredits( price )
+		SWGRP.Notify( ply, "Failed to craft ration." )
+		return
 	end
 
-	ply:EmitSound( "npc/barnacle/barnacle gulp2.wav", 60, math.random( 95, 110 ) )
-	SWGRP.Notify( ply, string.format( "Consumed %s for %s.", food.name, SWGRP.FormatCredits( price ) ) )
-	SWGRP.Hooks.Call( "SWGRPEntityPurchased", ply, food.name, price )
+	SWGRP.Economy.AlignBottomToGround( ent, pos, ang )
+
+	SWGRP.Notify( ply, string.format( "Crafted %s for %s. It dropped in front of you.", food.name, SWGRP.FormatCredits( price ) ) )
+	SWGRP.Hooks.Call( "SWGRPFoodCrafted", ply, food.name, price )
 end
 
 -- Unlike food (consumed instantly), spice is crafted at a Spice Storage Terminal
@@ -490,7 +567,18 @@ function SWGRP.Economy.BuyEntity( ply, class )
 end
 
 function SWGRP.Economy.BuyAmmo( ply, ammoName )
+	ammoName = string.Trim( ammoName or "" )
 	local data = SWGRP.AmmoTypes[ammoName]
+
+	if not data then
+		for id, row in pairs( SWGRP.AmmoTypes or {} ) do
+			if string.Trim( id ) == ammoName or row.name == ammoName then
+				data = row
+				break
+			end
+		end
+	end
+
 	if not data then
 		SWGRP.Notify( ply, "That ammunition is unavailable." )
 		return
@@ -516,7 +604,7 @@ function SWGRP.Economy.BuyAmmo( ply, ammoName )
 
 	SWGRP.Materials.Add( ply, "energy_cell", cells )
 	SWGRP.Notify( ply, string.format(
-		"Purchased %d energy cell(s). Use LOAD CELL on the bottom-right energy panel.",
+		"Purchased %d energy cell(s). Press R to load into your blaster.",
 		cells
 	) )
 
@@ -554,4 +642,26 @@ concommand.Add( "swgrp_givecredits", function( ply, cmd, args )
 	if IsValid( target ) and amount > 0 then
 		target:SWGRP_AddCredits( amount )
 	end
+end )
+
+-- Override engine "give" so players don't hit the SuperAdmin cheat gate when
+-- trying to move credits from the console. Chat uses /pay and /dropcredits.
+concommand.Add( "give", function( ply, cmd, args )
+	if not IsValid( ply ) then return end
+	local amount = tonumber( args[1] )
+	if amount and amount > 0 then
+		SWGRP.Economy.PayCredits( ply, amount )
+		return
+	end
+	SWGRP.Notify( ply, "Use /pay <amount> (look at a player) or /dropcredits <amount> in chat." )
+end )
+
+concommand.Add( "dropcredits", function( ply, cmd, args )
+	if not IsValid( ply ) then return end
+	SWGRP.Economy.DropCredits( ply, tonumber( args[1] ) or 0 )
+end )
+
+concommand.Add( "moneydrop", function( ply, cmd, args )
+	if not IsValid( ply ) then return end
+	SWGRP.Economy.DropCredits( ply, tonumber( args[1] ) or 0 )
 end )

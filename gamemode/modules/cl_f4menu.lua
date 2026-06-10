@@ -222,12 +222,12 @@ local function BuildShop( sheet, UI, frame )
 		shipCatalog:AutoSelectFirst()
 	end
 
-	-- Ammunition — purchase cells here; load them from the bottom-right energy panel
-	if table.Count( SWGRP.AmmoTypes ) > 0 then
+	-- Ammunition — purchase cells here; press R while holding a blaster to load
+		if table.Count( SWGRP.AmmoTypes ) > 0 then
 		local ammoCatalog = UI.CreateCatalogTab( sheet, "Ammunition", "icon16/bullet_add.png" )
 		local perCell = SWGRP.Config.AmmoRoundsPerEnergyCell or 5
 		for name, data in SortedPairsByMemberValue( SWGRP.AmmoTypes, "name" ) do
-			local loadHint = "Load purchased cells from the energy panel (bottom-right)."
+			local loadHint = "Press R to load purchased cells into your blaster."
 			ammoCatalog:AddItem( {
 				name = data.name,
 				subtitle = data.category or "Ammunition",

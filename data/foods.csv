@@ -7,4 +7,8 @@ Roasted Nuna,models/food/roast_porg.mdl,100,80,10,*,Food
 Kaadu Burger,models/food/bantha_burger.mdl,100,80,10,*,Food
 Ration Bar,models/food/ration_bar.mdl,50,10,10,*,Snack
 Meiloorun,models/lordtrilobite/starwars/props/food_fruit_meiloorun.mdl,50,10,10,*,Snack
-Blue Milk,models/food/blue_milk.mdl,75,40,10,*,w
+Blue Milk,models/food/blue_milk.mdl,75,40,10,*,Drink
+Scrap Ration,models/props_junk/garbage_bag_01a.mdl,20,15,0,*,Scrap
+Stale Biscuit,models/props_junk/garbage_metalcan001a.mdl,15,10,0,*,Scrap
+Mystery Can,models/props_junk/garbage_metalcan002a.mdl,25,20,5,*,Scrap
+Dried Jerky Strip,models/props_junk/cardboard_box003a.mdl,35,25,0,*,Snack
