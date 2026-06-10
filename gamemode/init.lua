@@ -5,15 +5,40 @@
 AddCSLuaFile( "cl_init.lua" )
 AddCSLuaFile( "shared.lua" )
 
-local function AddCSLuaFiles( path )
-	local files, dirs = file.Find( path .. "/*", "LUA" )
+-- Register client/shared scripts for connecting players.
+-- file.Find(..., "LUA") with relative paths is unreliable on Linux srcds; scan the
+-- real gamemodes/ tree with GAME instead (same approach as bundled FAdmin).
+local gmFolder = GM.FolderName or "swgrp"
+local gmDiskRoot = "gamemodes/" .. gmFolder .. "/gamemode"
+local csLuaCount = 0
+
+local function ShouldSendToClient( relPath )
+	local name = string.GetFileFromFilename( relPath )
+	return string.sub( name, 1, 3 ) ~= "sv_"
+end
+
+local function AddCSLuaFilesDir( subdir )
+	local diskPath = gmDiskRoot .. "/" .. subdir
+	local files, dirs = file.Find( diskPath .. "/*", "GAME" )
+	if not files then
+		ErrorNoHalt( "[SWGRP] AddCSLuaFiles: cannot read " .. diskPath .. " (check path and permissions)\n" )
+		return
+	end
+
 	for _, f in ipairs( files ) do
 		if string.EndsWith( f, ".lua" ) then
-			AddCSLuaFile( path .. "/" .. f )
+			local rel = subdir .. "/" .. f
+			if ShouldSendToClient( rel ) then
+				AddCSLuaFile( rel )
+				csLuaCount = csLuaCount + 1
+			end
 		end
 	end
-	for _, d in ipairs( dirs ) do
-		AddCSLuaFiles( path .. "/" .. d )
+
+	for _, d in ipairs( dirs or {} ) do
+		if d ~= "." and d ~= ".." then
+			AddCSLuaFilesDir( subdir .. "/" .. d )
+		end
 	end
 end
 
@@ -21,12 +46,20 @@ AddCSLuaFile( "libraries/sh_cami.lua" )
 AddCSLuaFile( "libraries/sh_fadmin_compat.lua" )
 AddCSLuaFile( "modules/fadmin/sh_fadmin_darkrp.lua" )
 
-AddCSLuaFiles( "config" )
-AddCSLuaFiles( "libraries" )
-AddCSLuaFiles( "modules" )
-AddCSLuaFiles( "language" )
-AddCSLuaFiles( "vgui" )
-AddCSLuaFiles( "player_class" )
+for _, dir in ipairs( { "config", "libraries", "modules", "language", "vgui", "player_class", "custom" } ) do
+	AddCSLuaFilesDir( dir )
+end
+
+local configOnDisk = file.Find( gmDiskRoot .. "/config/*.lua", "GAME" )
+print( string.format(
+	"[SWGRP] AddCSLuaFile: %d scripts queued for clients (%d config files on disk)\n",
+	csLuaCount,
+	configOnDisk and #configOnDisk or 0
+) )
+
+if csLuaCount < 10 then
+	ErrorNoHalt( "[SWGRP] WARNING: very few client scripts registered — clients will fail to load. Check gamemode path/permissions.\n" )
+end
 
 include( "shared.lua" )
 include( "libraries/sv_entity_loader.lua" )
