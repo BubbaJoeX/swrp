@@ -91,5 +91,5 @@
 
 "loadscreen"
 {
-	"url"	"swgrp/loadscreen/index.html"
+	"url"	"asset://garrysmod/gamemodes/swgrp/loadscreen/index.html"
 }

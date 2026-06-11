@@ -39,8 +39,15 @@ FAdmin.StartHooks["SWGRP"] = function()
 		return FAdmin.Access.PlayerHasPrivilege( LocalPlayer(), "SWGRP_AdminCommands", ply )
 	end
 
+	local UI = SWGRP.UI
+	local credCol = UI and UI.Colors.primary or Color( 255, 180, 50 )
+	local jobCol = UI and UI.Colors.accent or Color( 80, 200, 255 )
+	local warnCol = UI and UI.Colors.danger or Color( 255, 60, 60 )
+	local healCol = Color( 80, 200, 120 )
+	local arrestCol = UI and UI.Colors.primary or Color( 255, 180, 50 )
+
 	FAdmin.ScoreBoard.Player:AddActionButton( "Set Credits", "icon16/money.png",
-		Color( 80, 180, 80, 255 ), canManage,
+		credCol, canManage,
 		function( ply )
 			Derma_StringRequest( "Set Credits",
 				"Set credit balance for " .. ply:Nick(),
@@ -51,7 +58,7 @@ FAdmin.StartHooks["SWGRP"] = function()
 		end )
 
 	FAdmin.ScoreBoard.Player:AddActionButton( "Give Credits", "icon16/money_add.png",
-		Color( 80, 180, 80, 255 ), canManage,
+		credCol, canManage,
 		function( ply )
 			Derma_StringRequest( "Give Credits",
 				"Amount of credits to add to " .. ply:Nick(),
@@ -62,7 +69,7 @@ FAdmin.StartHooks["SWGRP"] = function()
 		end )
 
 	FAdmin.ScoreBoard.Player:AddActionButton( "Set Job", "icon16/user_suit.png",
-		Color( 90, 140, 220, 255 ), canManage,
+		jobCol, canManage,
 		function( ply )
 			local menu = DermaMenu()
 
@@ -84,14 +91,14 @@ FAdmin.StartHooks["SWGRP"] = function()
 
 	FAdmin.ScoreBoard.Player:AddActionButton(
 		function( ply ) return ply:SWGRP_IsArrested() and "Release" or "Arrest" end,
-		"icon16/lock.png", Color( 210, 120, 40, 255 ), canManage,
+		"icon16/lock.png", arrestCol, canManage,
 		function( ply )
 			RunConsoleCommand( "_FAdmin", "SWGRPArrest", ply:UserID() )
 		end )
 
 	FAdmin.ScoreBoard.Player:AddActionButton(
 		function( ply ) return ply:SWGRP_IsWanted() and "Clear Wanted" or "Mark Wanted" end,
-		"icon16/error.png", Color( 190, 60, 60, 255 ), canManage,
+		"icon16/error.png", warnCol, canManage,
 		function( ply )
 			if ply:SWGRP_IsWanted() then
 				RunConsoleCommand( "_FAdmin", "SWGRPWanted", ply:UserID() )
@@ -106,13 +113,13 @@ FAdmin.StartHooks["SWGRP"] = function()
 		end )
 
 	FAdmin.ScoreBoard.Player:AddActionButton( "Heal", "icon16/heart.png",
-		Color( 80, 200, 120, 255 ), canManage,
+		healCol, canManage,
 		function( ply )
 			RunConsoleCommand( "_FAdmin", "SWGRPHeal", ply:UserID() )
 		end )
 
 	FAdmin.ScoreBoard.Player:AddActionButton( "Slay", "icon16/bomb.png",
-		Color( 190, 60, 60, 255 ), canManage,
+		warnCol, canManage,
 		function( ply )
 			RunConsoleCommand( "_FAdmin", "SWGRPSlay", ply:UserID() )
 		end )

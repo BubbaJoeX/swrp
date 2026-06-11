@@ -25,6 +25,27 @@ UI.Spacing = {
 	preview    = 290,
 }
 
+-- FAdmin scoreboard layout (shared between HUD paint and vgui positioning)
+UI.ScoreboardLayout = {
+	margin       = 24,
+	headerHeight = 108,
+	sortBarHeight = 36,
+	sectionGap   = 12,
+	listPad      = 10,
+	rowGap       = 6,
+	rowHeight    = 44,
+	logoSize     = 56,
+	backW        = 80,
+	backH        = 34,
+	playerAvatar = 136,
+	playerLeftW  = 212,
+	infoRowH     = 30,
+	panelPad     = 14,
+	actionBtnH   = 42,
+	actionBtnMinW = 140,
+	actionGap    = 8,
+}
+
 UI.Colors = {
 	bg         = Color( 10, 15, 25, 245 ),
 	bgLight    = Color( 18, 24, 38, 230 ),
@@ -43,7 +64,12 @@ UI.Colors = {
 -- True while any full-screen SWGRP terminal (F4 shop, F3 datapad, scoreboard)
 -- is open, so the HUD can stand down and avoid bleeding text through the menu.
 function UI.IsTerminalOpen()
-	return IsValid( SWGRP.F4Frame ) or IsValid( SWGRP.ServicesFrame ) or IsValid( SWGRP.Scoreboard ) or IsValid( SWGRP.Pocket and SWGRP.Pocket.Menu )
+	if IsValid( SWGRP.F4Frame ) or IsValid( SWGRP.ServicesFrame ) or IsValid( SWGRP.Scoreboard ) then
+		return true
+	end
+	if IsValid( SWGRP.Pocket and SWGRP.Pocket.Menu ) then return true end
+	if FAdmin and FAdmin.ScoreBoard and FAdmin.ScoreBoard.Visible then return true end
+	return false
 end
 
 -- Floating billboard label drawn above a world entity so SWGRP service props
@@ -207,6 +233,284 @@ function UI.StyleScrollPanel( scroll )
 			surface.DrawOutlinedRect( 2, 2, w - 4, h - 4, 1 )
 		end
 	end
+end
+
+function UI.StyleVBar( bar )
+	if not IsValid( bar ) then return end
+	bar:SetWide( 10 )
+	bar.Paint = function( s, w, h )
+		UI.SyncColors()
+		surface.SetDrawColor( UI.Colors.bg )
+		surface.DrawRect( 0, 0, w, h )
+	end
+	if IsValid( bar.btnUp ) then bar.btnUp.Paint = function() end end
+	if IsValid( bar.btnDown ) then bar.btnDown.Paint = function() end end
+	if IsValid( bar.btnGrip ) then
+		bar.btnGrip.Paint = function( s, w, h )
+			UI.SyncColors()
+			surface.SetDrawColor( UI.Colors.bgHover )
+			surface.DrawRect( 2, 2, w - 4, h - 4 )
+			surface.SetDrawColor( UI.Colors.borderDim )
+			surface.DrawOutlinedRect( 2, 2, w - 4, h - 4, 1 )
+		end
+	end
+end
+
+function UI.StylePanelList( list )
+	if not IsValid( list ) then return end
+	list.Paint = UI.PaintTerminalPanel
+	if IsValid( list.VBar ) then
+		UI.StyleVBar( list.VBar )
+	end
+end
+
+UI._fontsRegistered = UI._fontsRegistered or false
+
+function UI.RegisterFonts()
+	if UI._fontsRegistered then return end
+	UI._fontsRegistered = true
+
+	surface.CreateFont( "SWGRP_ScoreboardTitle", {
+		font = "Tahoma", size = 28, weight = 800, antialias = true, extended = true,
+	} )
+	surface.CreateFont( "SWGRP_ScoreboardSubtitle", {
+		font = "Tahoma", size = 16, weight = 600, antialias = true, extended = true,
+	} )
+	surface.CreateFont( "SWGRP_ScoreboardRow", {
+		font = "Tahoma", size = 15, weight = 600, antialias = true, extended = true,
+	} )
+	surface.CreateFont( "SWGRP_ScoreboardRowSmall", {
+		font = "Tahoma", size = 13, weight = 500, antialias = true, extended = true,
+	} )
+	surface.CreateFont( "SWGRP_Notify", {
+		font = "Tahoma", size = 15, weight = 600, antialias = true, extended = true,
+	} )
+
+	surface.CreateFont( "ScoreboardHeader", {
+		font = "Tahoma", size = 26, weight = 700, antialias = true, extended = true,
+	} )
+	surface.CreateFont( "ScoreboardSubtitle", {
+		font = "Tahoma", size = 15, weight = 500, antialias = true, extended = true,
+	} )
+	surface.CreateFont( "ScoreboardPlayerNameBig", {
+		font = "Tahoma", size = 15, weight = 600, antialias = true, extended = true,
+	} )
+	surface.CreateFont( "ScoreboardPlayerName", {
+		font = "Tahoma", size = 14, weight = 500, antialias = true, extended = true,
+	} )
+end
+
+function UI.PaintScoreboardPane( x, y, w, h, opts )
+	UI.SyncColors()
+	opts = opts or {}
+	local L = UI.ScoreboardLayout
+	local margin = L.margin
+	local headerH = L.headerHeight
+	local textX = x + margin + L.logoSize + 16
+	local titleY = y + margin + 6
+
+	surface.SetDrawColor( UI.Colors.shadow )
+	surface.DrawRect( x + 3, y + 3, w, h )
+	surface.SetDrawColor( UI.Colors.bg )
+	surface.DrawRect( x, y, w, h )
+	surface.SetDrawColor( UI.Colors.border )
+	surface.DrawOutlinedRect( x, y, w, h, 2 )
+
+	surface.SetDrawColor( UI.Colors.primary.r, UI.Colors.primary.g, UI.Colors.primary.b, 28 )
+	surface.DrawRect( x, y, w, headerH )
+	surface.SetDrawColor( UI.Colors.borderDim )
+	surface.DrawRect( x, y + headerH, w, 1 )
+
+	draw.SimpleText( "GALACTIC CENSUS", "SWGRP_ScoreboardTitle", textX, titleY, UI.Colors.primary, TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP )
+
+	if opts.paintSortBar then
+		local sortY = y + headerH + L.sectionGap
+		surface.SetDrawColor( UI.Colors.bgLight )
+		surface.DrawRect( x + margin, sortY, w - margin * 2, L.sortBarHeight )
+		surface.SetDrawColor( UI.Colors.borderDim )
+		surface.DrawOutlinedRect( x + margin, sortY, w - margin * 2, L.sortBarHeight, 1 )
+	end
+end
+
+function UI.ScoreboardLogoRect( x, y )
+	local L = UI.ScoreboardLayout
+	local logoY = y + ( L.headerHeight - L.logoSize ) / 2
+	return x + L.margin, logoY, L.logoSize, L.logoSize
+end
+
+function UI.ScoreboardSortBarY( y )
+	local L = UI.ScoreboardLayout
+	return y + L.headerHeight + L.sectionGap
+end
+
+function UI.ScoreboardSortLabelY( y )
+	local L = UI.ScoreboardLayout
+	return UI.ScoreboardSortBarY( y ) + math.floor( ( L.sortBarHeight - 16 ) / 2 )
+end
+
+function UI.ScoreboardListRect( x, y, w, h )
+	local L = UI.ScoreboardLayout
+	local listY = UI.ScoreboardSortBarY( y ) + L.sortBarHeight + L.sectionGap
+	local listW = w - L.margin * 2
+	local listH = h - ( listY - y ) - L.margin
+	return x + L.margin, listY, listW, listH
+end
+
+function UI.ScoreboardBodyY( y )
+	local L = UI.ScoreboardLayout
+	return y + L.headerHeight + L.sectionGap
+end
+
+function UI.ScoreboardContentRect( x, y, w, h )
+	local L = UI.ScoreboardLayout
+	local bodyY = UI.ScoreboardBodyY( y )
+	local contentH = h - ( bodyY - y ) - L.margin
+	return x + L.margin, bodyY, w - L.margin * 2, contentH
+end
+
+function UI.AddScoreboardInfoRow( parent, label, value, opts )
+	opts = opts or {}
+	UI.SyncColors()
+	local L = UI.ScoreboardLayout
+
+	local row = vgui.Create( "DPanel", parent )
+	row:SetTall( L.infoRowH )
+	row:Dock( TOP )
+	row:DockMargin( 0, 0, 0, 4 )
+	row.Paint = function( s, rw, rh )
+		UI.SyncColors()
+		if s.Hovered then
+			surface.SetDrawColor( UI.Colors.bgHover )
+			surface.DrawRect( 0, 0, rw, rh )
+		end
+		surface.SetDrawColor( UI.Colors.borderDim )
+		surface.DrawRect( 0, rh - 1, rw, 1 )
+	end
+
+	local lbl = vgui.Create( "DLabel", row )
+	lbl:SetFont( "SWGRP_ScoreboardRowSmall" )
+	lbl:SetText( label )
+	lbl:SetColor( UI.Colors.primary )
+	lbl:Dock( LEFT )
+	lbl:DockMargin( L.panelPad, 0, 10, 0 )
+	lbl:SetWide( 110 )
+
+	local val = vgui.Create( "DLabel", row )
+	val:SetFont( "SWGRP_ScoreboardRow" )
+	val:SetText( value or "" )
+	val:SetColor( opts.accent and UI.Colors.accent or UI.Colors.secondary )
+	val:Dock( FILL )
+	val:DockMargin( 0, 0, L.panelPad, 0 )
+
+	if opts.tooltip then
+		row:SetTooltip( opts.tooltip )
+	end
+
+	if opts.onClick then
+		row:SetCursor( "hand" )
+		function row:OnMousePressed( mcode )
+			opts.onClick( self, mcode )
+		end
+	end
+
+	return row, val
+end
+
+function UI.PaintSortArrow( panel, w, h, direction, active )
+	UI.SyncColors()
+	surface.SetDrawColor( UI.Colors.bgLight )
+	surface.DrawRect( 0, 0, w, h )
+	surface.SetDrawColor( active and UI.Colors.border or UI.Colors.borderDim )
+	surface.DrawOutlinedRect( 0, 0, w, h, 1 )
+	local col = active and UI.Colors.primary or UI.Colors.secondary
+	local cx, cy = w / 2, h / 2
+	surface.SetDrawColor( col )
+	if direction == "Down" then
+		surface.DrawPoly( {
+			{ x = cx - 4, y = cy - 2 },
+			{ x = cx + 4, y = cy - 2 },
+			{ x = cx, y = cy + 3 },
+		} )
+	else
+		surface.DrawPoly( {
+			{ x = cx - 4, y = cy + 2 },
+			{ x = cx + 4, y = cy + 2 },
+			{ x = cx, y = cy - 3 },
+		} )
+	end
+end
+
+function UI.PaintBackButton( self, w, h )
+	UI.SyncColors()
+	local col = self.Hovered and UI.Colors.bgHover or UI.Colors.bgLight
+	surface.SetDrawColor( col )
+	surface.DrawRect( 2, 2, w - 4, h - 4 )
+	surface.SetDrawColor( UI.Colors.borderDim )
+	surface.DrawOutlinedRect( 2, 2, w - 4, h - 4, 1 )
+	if self.Hovered then
+		surface.SetDrawColor( UI.Colors.primary.r, UI.Colors.primary.g, UI.Colors.primary.b, 30 )
+		surface.DrawRect( 2, 2, w - 4, h - 4 )
+	end
+	draw.SimpleText( "BACK", "SWGRP_ScoreboardRowSmall", w / 2, h / 2, UI.Colors.primary, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER )
+end
+
+function UI.StyleTerminalLabel( label, font, color )
+	if not IsValid( label ) then return end
+	UI.SyncColors()
+	label:SetFont( font or "SWGRP_ScoreboardSubtitle" )
+	label:SetColor( color or UI.Colors.secondary )
+end
+
+function UI.StyleDermaMenu( menu )
+	if not IsValid( menu ) then return end
+	UI.SyncColors()
+	menu.Paint = function( s, w, h )
+		UI.SyncColors()
+		surface.SetDrawColor( UI.Colors.bg )
+		surface.DrawRect( 0, 0, w, h )
+		surface.SetDrawColor( UI.Colors.border )
+		surface.DrawOutlinedRect( 0, 0, w, h, 1 )
+	end
+
+	local oldAdd = menu.AddOption
+	menu.AddOption = function( s, text, func )
+		local opt = oldAdd( s, text, func )
+		if IsValid( opt ) then
+			opt:SetTextColor( UI.Colors.secondary )
+			opt:SetFont( "DermaDefault" )
+			opt.Paint = function( btn, w, h )
+				UI.SyncColors()
+				if btn.Hovered then
+					surface.SetDrawColor( UI.Colors.bgHover )
+					surface.DrawRect( 0, 0, w, h )
+					surface.SetDrawColor( UI.Colors.primary.r, UI.Colors.primary.g, UI.Colors.primary.b, 25 )
+					surface.DrawRect( 0, 0, w, h )
+				end
+			end
+		end
+		return opt
+	end
+end
+
+function UI.StyleDermaFrame( frame, title )
+	if not IsValid( frame ) then return end
+	UI.SyncColors()
+	frame.Paint = UI.PaintTerminalFrame
+	if title then frame:SetTitle( title ) end
+	if IsValid( frame.lblTitle ) then
+		frame.lblTitle:SetVisible( false )
+	end
+end
+
+function UI.SyncFAdminMessageColors()
+	if not FAdmin or not FAdmin.Messages or not FAdmin.Messages.MsgTypes then return end
+	UI.SyncColors()
+	local C = UI.Colors
+	FAdmin.Messages.MsgTypes.ERROR.COLOR = Color( C.danger.r, C.danger.g, C.danger.b, 210 )
+	FAdmin.Messages.MsgTypes.NOTIFY.COLOR = Color( C.primary.r, C.primary.g, C.primary.b, 210 )
+	FAdmin.Messages.MsgTypes.QUESTION.COLOR = Color( C.accent.r, C.accent.g, C.accent.b, 210 )
+	FAdmin.Messages.MsgTypes.GOOD.COLOR = Color( 80, 200, 120, 210 )
+	FAdmin.Messages.MsgTypes.BAD.COLOR = Color( C.danger.r, C.danger.g, C.danger.b, 210 )
 end
 
 function UI.TruncateText( text, font, maxWidth )

@@ -2,13 +2,25 @@ FAdmin.ScoreBoard.Server.Information = {} -- Compatibility for autoreload
 FAdmin.ScoreBoard.Server.ActionButtons = {} -- Refresh server buttons when reloading gamemode
 
 local function MakeServerOptions()
-    local _, YPos, Width = 20, FAdmin.ScoreBoard.Y + 120 + FAdmin.ScoreBoard.Height / 5 + 20, (FAdmin.ScoreBoard.Width - 40) / 3
+    local UI = SWGRP.UI
+    local L = UI and UI.ScoreboardLayout
+    local bx, by, bw, bh = FAdmin.ScoreBoard.X, FAdmin.ScoreBoard.Y, FAdmin.ScoreBoard.Width, FAdmin.ScoreBoard.Height
+    local margin = L and L.margin or 24
+    local gap = L and L.sectionGap or 12
+    local bodyY = UI and UI.ScoreboardBodyY(by) or (by + 120)
+    local infoH = math.floor(bh * 0.18)
+    local YPos = bodyY + infoH + gap
+    local Width = (bw - margin * 2) / 3
 
     FAdmin.ScoreBoard.Server.Controls.ServerActionsCat = FAdmin.ScoreBoard.Server.Controls.ServerActionsCat or vgui.Create("FAdminPlayerCatagory")
     FAdmin.ScoreBoard.Server.Controls.ServerActionsCat:SetLabel("  Server Actions")
-    FAdmin.ScoreBoard.Server.Controls.ServerActionsCat.CatagoryColor = Color(155, 0, 0, 255)
+    local UI = SWGRP.UI
+    local danger = UI and UI.Colors.danger or Color(255, 60, 60)
+    local accent = UI and UI.Colors.accent or Color(80, 200, 255)
+
+    FAdmin.ScoreBoard.Server.Controls.ServerActionsCat.CatagoryColor = danger
     FAdmin.ScoreBoard.Server.Controls.ServerActionsCat:SetSize(Width-5, FAdmin.ScoreBoard.Height - 20 - YPos)
-    FAdmin.ScoreBoard.Server.Controls.ServerActionsCat:SetPos(FAdmin.ScoreBoard.X + 20, YPos)
+    FAdmin.ScoreBoard.Server.Controls.ServerActionsCat:SetPos(bx + margin, YPos)
     FAdmin.ScoreBoard.Server.Controls.ServerActionsCat:SetVisible(true)
     function FAdmin.ScoreBoard.Server.Controls.ServerActionsCat:Toggle()
     end
@@ -23,9 +35,9 @@ local function MakeServerOptions()
 
     FAdmin.ScoreBoard.Server.Controls.PlayerActionsCat = FAdmin.ScoreBoard.Server.Controls.PlayerActionsCat or vgui.Create("FAdminPlayerCatagory")
     FAdmin.ScoreBoard.Server.Controls.PlayerActionsCat:SetLabel("  Player Actions")
-    FAdmin.ScoreBoard.Server.Controls.PlayerActionsCat.CatagoryColor = Color(0, 155, 0, 255)
+    FAdmin.ScoreBoard.Server.Controls.PlayerActionsCat.CatagoryColor = Color( 80, 200, 120 )
     FAdmin.ScoreBoard.Server.Controls.PlayerActionsCat:SetSize(Width-5, FAdmin.ScoreBoard.Height - 20 - YPos)
-    FAdmin.ScoreBoard.Server.Controls.PlayerActionsCat:SetPos(FAdmin.ScoreBoard.X + 20 + Width, YPos)
+    FAdmin.ScoreBoard.Server.Controls.PlayerActionsCat:SetPos(bx + margin + Width, YPos)
     FAdmin.ScoreBoard.Server.Controls.PlayerActionsCat:SetVisible(true)
     function FAdmin.ScoreBoard.Server.Controls.PlayerActionsCat:Toggle()
     end
@@ -40,9 +52,9 @@ local function MakeServerOptions()
 
     FAdmin.ScoreBoard.Server.Controls.ServerSettingsCat = FAdmin.ScoreBoard.Server.Controls.ServerSettingsCat or vgui.Create("FAdminPlayerCatagory")
     FAdmin.ScoreBoard.Server.Controls.ServerSettingsCat:SetLabel("  Server Settings")
-    FAdmin.ScoreBoard.Server.Controls.ServerSettingsCat.CatagoryColor = Color(0, 0, 155, 255)
+    FAdmin.ScoreBoard.Server.Controls.ServerSettingsCat.CatagoryColor = accent
     FAdmin.ScoreBoard.Server.Controls.ServerSettingsCat:SetSize(Width-5, FAdmin.ScoreBoard.Height - 20 - YPos)
-    FAdmin.ScoreBoard.Server.Controls.ServerSettingsCat:SetPos(FAdmin.ScoreBoard.X + 20 + Width * 2, YPos)
+    FAdmin.ScoreBoard.Server.Controls.ServerSettingsCat:SetPos(bx + margin + Width * 2, YPos)
     FAdmin.ScoreBoard.Server.Controls.ServerSettingsCat:SetVisible(true)
     function FAdmin.ScoreBoard.Server.Controls.ServerSettingsCat:Toggle()
     end
@@ -115,8 +127,15 @@ function FAdmin.ScoreBoard.Server.Show(ply)
         FAdmin.ScoreBoard.Server.Controls.InfoPanel:Remove()
     end
     FAdmin.ScoreBoard.Server.Controls.InfoPanel = vgui.Create("FAdminPanelList")
-    FAdmin.ScoreBoard.Server.Controls.InfoPanel:SetPos(FAdmin.ScoreBoard.X + 20, FAdmin.ScoreBoard.Y + 120)
-    FAdmin.ScoreBoard.Server.Controls.InfoPanel:SetSize(FAdmin.ScoreBoard.Width - 40, FAdmin.ScoreBoard.Height / 5)
+    local UI = SWGRP.UI
+    local bx, by, bw, bh = FAdmin.ScoreBoard.X, FAdmin.ScoreBoard.Y, FAdmin.ScoreBoard.Width, FAdmin.ScoreBoard.Height
+    local bodyY = UI and UI.ScoreboardBodyY(by) or (by + 120)
+    local margin = UI and UI.ScoreboardLayout.margin or 24
+    local infoH = math.floor(bh * 0.18)
+
+    FAdmin.ScoreBoard.Server.Controls.InfoPanel:SetPos(bx + margin, bodyY)
+    FAdmin.ScoreBoard.Server.Controls.InfoPanel:SetSize(bw - margin * 2, infoH)
+    if UI and UI.StylePanelList then UI.StylePanelList(FAdmin.ScoreBoard.Server.Controls.InfoPanel) end
     FAdmin.ScoreBoard.Server.Controls.InfoPanel:SetVisible(true)
     FAdmin.ScoreBoard.Server.Controls.InfoPanel:Clear(true)
 

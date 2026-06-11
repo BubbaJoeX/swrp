@@ -13,6 +13,8 @@ Inc( "modules/fadmin/cl_fadmin.lua" )
 Inc( "modules/fadmin/cl_fadmin_swgrp.lua" )
 
 Inc( "vgui/swgrp_terminal.lua" )
+Inc( "modules/cl_assets.lua" )
+Inc( "modules/cl_ui_skin.lua" )
 Inc( "modules/cl_spawnmenu.lua" )
 Inc( "modules/cl_hud.lua" )
 Inc( "modules/cl_ammo.lua" )

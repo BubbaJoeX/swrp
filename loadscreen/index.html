@@ -98,7 +98,22 @@
 		}
 
 		.brand {
+			display: flex;
+			align-items: center;
+			gap: 20px;
 			margin-bottom: 22px;
+		}
+
+		.brand-logo {
+			width: 72px;
+			height: 72px;
+			object-fit: contain;
+			flex-shrink: 0;
+			filter: drop-shadow(0 0 12px rgba(255, 180, 50, 0.25));
+		}
+
+		.brand-copy {
+			min-width: 0;
 		}
 
 		.brand-kicker {
@@ -230,9 +245,12 @@
 
 	<div class="frame">
 		<div class="brand">
-			<div class="brand-kicker">Outer Rim Network</div>
-			<div class="brand-title">Galaxies RP</div>
-			<div class="brand-sub">Star Wars Galaxies Roleplay</div>
+			<img class="brand-logo" id="brand-logo" src="asset://garrysmod/materials/server.png" alt="">
+			<div class="brand-copy">
+				<div class="brand-kicker">Outer Rim Network</div>
+				<div class="brand-title">Galaxies RP</div>
+				<div class="brand-sub">Star Wars Galaxies Roleplay</div>
+			</div>
 		</div>
 
 		<div class="info-grid">
@@ -292,6 +310,26 @@
 			if (fill) fill.style.width = Math.max(8, pct) + "%";
 			if (count) count.textContent = done + " / " + filesTotal + " files";
 		}
+
+		(function() {
+			var logo = document.getElementById("brand-logo");
+			if (!logo) return;
+
+			var candidates = [
+				"asset://garrysmod/materials/server.png",
+				"asset://garrysmod/gamemodes/swgrp/materials/server.png"
+			];
+
+			var idx = 0;
+			logo.onerror = function() {
+				idx += 1;
+				if (idx < candidates.length) {
+					logo.src = candidates[idx];
+				} else {
+					logo.style.display = "none";
+				}
+			};
+		})();
 
 		window.GameDetails = function(servername, serverurl, mapname, maxplayers, steamid, gamemode, volume, language, niceGamemode) {
 			setText("server-name", servername || "Galaxies RP Server");

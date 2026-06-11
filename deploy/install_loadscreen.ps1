@@ -20,5 +20,8 @@ Copy-Item -Force $source $target
 Write-Host "Installed loading screen to:"
 Write-Host "  $target"
 Write-Host ""
-Write-Host "Add to cfg/server.cfg (if not already set):"
+Write-Host "Bundled copy (no install required for SP):"
+Write-Host "  gamemodes/swgrp/loadscreen/index.html"
+Write-Host ""
+Write-Host "Recommended server.cfg (gamemode also auto-applies when empty):"
 Write-Host '  sv_loadingurl "asset://garrysmod/html/swgrp/loadscreen.html"'

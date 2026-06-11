@@ -34,6 +34,8 @@ function FAdmin.ScoreBoard.Main.PlayerListView(Sorted, SortDown)
         local Row = vgui.Create("FadminPlayerRow")
         Row:SetPlayer(ply)
         Row:Dock(TOP)
+        local gap = SWGRP.UI and SWGRP.UI.ScoreboardLayout and SWGRP.UI.ScoreboardLayout.rowGap or 6
+        Row:DockMargin(4, 0, 4, gap)
         Row:InvalidateLayout()
 
         FAdmin.ScoreBoard.Main.Controls.FAdminPanelList:AddItem(Row)

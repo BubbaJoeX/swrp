@@ -11,7 +11,9 @@ function FAdmin.Messages.AddMessage(MsgType, Message)
     tab.recv    = SysTime()
     tab.velx    = 0
     tab.vely    = -5
-    surface.SetFont("GModNotify")
+    if SWGRP.UI and SWGRP.UI.RegisterFonts then SWGRP.UI.RegisterFonts() end
+    local notifyFont = "SWGRP_Notify"
+    surface.SetFont(notifyFont)
     local w, _  = surface.GetTextSize(Message)
     tab.x       = ScrW() / 2 + w * 0.5 + (ScrW() / 20)
     tab.y       = ScrH()
@@ -35,20 +37,19 @@ local function DrawNotice(k, v, i)
     local H = ScrH() / 1024
     local x = v.x - 75 * H
     local y = v.y - 27
-    surface.SetFont("GModNotify")
+    local notifyFont = "SWGRP_Notify"
+    surface.SetFont(notifyFont)
     local w, h = surface.GetTextSize(v.text)
     h = h + 16
     local col = v.col
+    local UI = SWGRP.UI
+    local bg = UI and UI.Colors.bg or Color(10, 15, 25, 230)
 
-    draw.RoundedBox(4, x - w - h + 24, y - 8, w + h - 16, h, col)
-    -- Draw Icon
-    surface.SetDrawColor(255, 255, 255, v.a)
+    draw.RoundedBox(6, x - w - h + 24, y - 8, w + h - 16, h, Color(bg.r, bg.g, bg.b, math.min(v.a, 230)))
+    surface.SetDrawColor(col.r, col.g, col.b, v.a)
+    surface.DrawOutlinedRect(x - w - h + 24, y - 8, w + h - 16, h, 1)
 
-    draw.DrawNonParsedSimpleText(v.text, "GModNotify", x + 1, y + 1, Color(0, 0, 0, v.a * 0.8), TEXT_ALIGN_RIGHT)
-    draw.DrawNonParsedSimpleText(v.text, "GModNotify", x - 1, y - 1, Color(0, 0, 0, v.a * 0.5), TEXT_ALIGN_RIGHT)
-    draw.DrawNonParsedSimpleText(v.text, "GModNotify", x + 1, y - 1, Color(0, 0, 0, v.a * 0.6), TEXT_ALIGN_RIGHT)
-    draw.DrawNonParsedSimpleText(v.text, "GModNotify", x - 1, y + 1, Color(0, 0, 0, v.a * 0.6), TEXT_ALIGN_RIGHT)
-    draw.DrawNonParsedSimpleText(v.text, "GModNotify", x, y, Color(255, 255, 255, v.a), TEXT_ALIGN_RIGHT)
+    draw.DrawNonParsedSimpleText(v.text, notifyFont, x, y, Color(255, 255, 255, v.a), TEXT_ALIGN_RIGHT)
     local ideal_y = ScrH() - (HUDNote_c - i) * h
     local ideal_x = ScrW() / 2 + w * 0.5 + (ScrW() / 20)
     local timeleft = 6 - (SysTime() - v.recv)
@@ -110,35 +111,50 @@ end
 hook.Add("HUDPaint", "FAdmin_MessagePaint", HUDPaint)
 
 local function ConsoleMessage(um)
-    MsgC(Color(255, 0, 0, 255), "(FAdmin) ", Color(200, 0, 200, 255), um:ReadString() .. "\n")
+    local c = ChatColors()
+    MsgC(c.red, "(FAdmin) ", c.brown, um:ReadString() .. "\n")
 end
 usermessage.Hook("FAdmin_ConsoleMessage", ConsoleMessage)
 
 
-local red = Color(255, 0, 0)
-local white = Color(190, 190, 190)
-local brown = Color(102, 51, 0)
-local blue = Color(102, 0, 255)
+local function ChatColors()
+    local UI = SWGRP.UI
+    if UI then UI.SyncColors() end
+    local C = UI and UI.Colors
+    return {
+        red = C and C.danger or Color(255, 60, 60),
+        white = C and C.secondary or Color(190, 190, 190),
+        brown = C and C.primary or Color(255, 180, 50),
+        blue = C and C.accent or Color(80, 200, 255),
+    }
+end
 
 -- Inserts the instigator into a notification message
 local function insertInstigator(res, instigator, _)
-    table.insert(res, brown)
+    local c = ChatColors()
+    table.insert(res, c.brown)
     table.insert(res, FAdmin.PlayerName(instigator))
 end
 
 -- Inserts the targets into the notification message
 local function insertTargets(res, _, targets)
-    table.insert(res, blue)
+    local c = ChatColors()
+    table.insert(res, c.blue)
     table.insert(res, FAdmin.TargetsToString(targets))
 end
 
 local modMessage = {
     instigator = insertInstigator,
-    you = function(res) table.insert(res, brown) table.insert(res, "you") end,
+    you = function(res)
+        local c = ChatColors()
+        table.insert(res, c.brown)
+        table.insert(res, "you")
+    end,
     targets = insertTargets,
 }
 local function showNotification(notification, instigator, targets, extraInfo)
-    local res = {red, "[", white, "FAdmin", red, "] "}
+    local c = ChatColors()
+    local res = {c.red, "[", c.white, "FAdmin", c.red, "] "}
 
     for _, text in pairs(notification.message) do
         if modMessage[text] then modMessage[text](res, instigator, targets) continue end
@@ -146,12 +162,12 @@ local function showNotification(notification, instigator, targets, extraInfo)
         if string.sub(text, 1, 10) == "extraInfo." then
             local id = tonumber(string.sub(text, 11))
 
-            table.insert(res, notification.extraInfoColors and notification.extraInfoColors[id] or white)
+            table.insert(res, notification.extraInfoColors and notification.extraInfoColors[id] or c.white)
             table.insert(res, extraInfo[id])
             continue
         end
 
-        table.insert(res, white)
+        table.insert(res, c.white)
         table.insert(res, text)
     end
 

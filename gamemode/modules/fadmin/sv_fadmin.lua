@@ -6,22 +6,7 @@ util.AddNetworkString("FAdmin_GlobalPlayerSettings")
 
 local SortedPairs, ipairs, pairs = SortedPairs, ipairs, pairs
 -- recursively adds everything in a directory to be downloaded by client
-local function AddDir(dir)
-    local files, folders = file.Find(dir .. "/*", "GAME")
-
-    for _, fdir in ipairs(folders) do
-        -- don't spam people with useless .svn folders
-        if fdir ~= ".svn" then
-            AddDir(dir .. "/" .. fdir)
-        end
-    end
-
-    for _, v in ipairs(files) do
-        resource.AddFile(dir .. "/" .. v)
-    end
-end
-
-AddDir("materials/fadmin")
+-- FAdmin materials are registered by modules/sv_resources.lua (gamemodes/swgrp/materials + content/)
 
 local function AddCSLuaFolder(fol)
     fol = string.lower(fol)
